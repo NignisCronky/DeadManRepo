@@ -18,6 +18,27 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AnimatedMesh.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Render.cpp" />
+    <ClCompile Include="StaticMesh.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AnimatedMesh.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Render.h" />
+    <ClInclude Include="RenderStructs.h" />
+    <ClInclude Include="StaticMesh.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="FBXVertexShader.hlsl" />
+    <FxCompile Include="LightTextureShader.hlsl" />
+    <FxCompile Include="TextureShader.hlsl" />
+    <FxCompile Include="TrivialPixelShader.hlsl" />
+    <FxCompile Include="TrivialVertexShader.hlsl" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3F9D9118-5AF4-427B-895B-939F8DD7F547}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -145,27 +166,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="AnimatedMesh.cpp" />
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Cpps\Main.cpp" />
-    <ClCompile Include="Render.cpp" />
-    <ClCompile Include="StaticMesh.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="AnimatedMesh.h" />
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="Headers\RenderStructs.h" />
-    <ClInclude Include="Render.h" />
-    <ClInclude Include="StaticMesh.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\PixelShaders\LightTextureShader.hlsl" />
-    <FxCompile Include="Shaders\PixelShaders\TextureShader.hlsl" />
-    <FxCompile Include="Shaders\PixelShaders\TrivialPixelShader.hlsl" />
-    <FxCompile Include="Shaders\VertexShaders\FBXVertexShader.hlsl" />
-    <FxCompile Include="Shaders\VertexShaders\TrivialVertexShader.hlsl" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
