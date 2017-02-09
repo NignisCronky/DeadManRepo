@@ -1,6 +1,7 @@
 Release
 Debug
 x64
+FBX SDK
 ipch
 *.suo
 *.sdf
