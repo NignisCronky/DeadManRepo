@@ -32,15 +32,15 @@ struct VERTEX { FLOAT X, Y, Z; float Color[4]; };  // a struct to define a singl
 DirectX::XMFLOAT4X4 view;
 DirectX::XMFLOAT4X4 proj;
 
-DirectX::XMFLOAT3  avatarPosition = { 0, 0, -50 };
+DirectX::XMFLOAT3  avatarPosition = { 0, 0, -4 };
 DirectX::XMFLOAT3 cameraPosition = avatarPosition;
 
 float avatarYaw = 0;
 
 DirectX::XMFLOAT3 cameraReference = { 0, 0, 1 };
 
-float rotationSpeed = 1.0f / 60.0f;
-float forwardSpeed = 50.0f / 60.0f;
+float rotationSpeed = 1.0f / 380.0f;
+float forwardSpeed = 1.0f / 380.0f;
 
 float viewAngle = DirectX::XM_PI / 4.0f;
 
@@ -63,7 +63,7 @@ void UpdatePOS();
 void UpdateCamera();
 void CameraUPdadte();
 
-
+void InitCamera();
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -100,7 +100,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	InitD3D(hWnd);
 
-
+	InitCamera();
 
 	MSG msg;
 	while (TRUE)
@@ -227,8 +227,8 @@ void RenderFrame(void)
 
 
 
-	UpdatePOS();
-	UpdateCamera();
+//	UpdatePOS();
+//	UpdateCamera();
 	CameraUPdadte();
 
 
@@ -392,7 +392,7 @@ void UpdateCamera()
 	DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationY(avatarYaw);
 
 	// Create a vector pointing the direction the camera is facing.
-	DirectX::XMVECTOR transformedReference = DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&cameraReference), rotationMatrix);
+	DirectX::XMVECTOR transformedReference = DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&avatarPosition), rotationMatrix);
 
 	DirectX::XMStoreFloat3(&debug, transformedReference);
 	float Debug1[3] = { debug.x, debug.y, debug.z };
@@ -412,46 +412,111 @@ void UpdateCamera()
 
 
 
+}
+
+
+void InitCamera()
+{
+	DirectX::XMFLOAT3 debug;
+	// Calculate the camera's current position.
+
+	DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationY(avatarYaw);
+
+	// Create a vector pointing the direction the camera is facing.
+	DirectX::XMVECTOR transformedReference = DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&cameraReference), rotationMatrix);
+
+	DirectX::XMStoreFloat3(&debug, transformedReference);
+	float Debug1[3] = { debug.x, debug.y, debug.z };
+
+	// Calculate the position the camera is looking at.
+	DirectX::XMVECTOR cameraLookat = DirectX::XMVectorAdd(DirectX::XMLoadFloat3(&cameraPosition), transformedReference);
+
+
+
+	DirectX::XMStoreFloat3(&debug, cameraLookat);
+	float Debug2[3] = { debug.x, debug.y, debug.z };
+
+	// Set up the view matrix and projection matrix.
+
+	DirectX::XMVECTOR UP = { 0.0f, 1.0f, 0.0f };
+	DirectX::XMStoreFloat4x4(&view, DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat3(&cameraPosition), cameraLookat, UP));
+
 	DirectX::XMStoreFloat4x4(&proj, DirectX::XMMatrixPerspectiveFovLH(viewAngle, (800.0f / 1100.0f), nearClip, farClip));
 }
+
 
 
 void CameraUPdadte()
 {
 	if (GetAsyncKeyState(0x57)) {//W - Move Forward
-		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, 0.0f, forwardSpeed);
+		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, 0.0f, -forwardSpeed);
 		DirectX::XMMATRIX temp_camera = DirectX::XMLoadFloat4x4(&view);
-		DirectX::XMMATRIX result = XMMatrixMultiply(translation, temp_camera);
+		DirectX::XMMATRIX result = XMMatrixMultiply(temp_camera, translation);
 		XMStoreFloat4x4(&view, result);
 	}
 	if (GetAsyncKeyState(0x53)) {//S - Move Backward
-		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, 0.0f, -forwardSpeed);
+		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, 0.0f, +forwardSpeed);
 		DirectX::XMMATRIX temp_camera = DirectX::XMLoadFloat4x4(&view);
-		DirectX::XMMATRIX result = XMMatrixMultiply(translation, temp_camera);
+		DirectX::XMMATRIX result = XMMatrixMultiply(temp_camera, translation);
 		XMStoreFloat4x4(&view, result);
 	}
 	if (GetAsyncKeyState(0x41)) {//A - Strafe Left
-		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(-forwardSpeed, 0.0f, 0.0f);
+		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(forwardSpeed, 0.0f, 0.0f);
 		DirectX::XMMATRIX temp_camera = DirectX::XMLoadFloat4x4(&view);
-		DirectX::XMMATRIX result = XMMatrixMultiply(translation, temp_camera);
+		DirectX::XMMATRIX result = XMMatrixMultiply(temp_camera, translation);
 		XMStoreFloat4x4(&view, result);
 	}
 	if (GetAsyncKeyState(0x44)) {//D - Strafe Right
-		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(forwardSpeed, 0.0f, 0.0f);
+		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(-forwardSpeed, 0.0f, 0.0f);
 		DirectX::XMMATRIX temp_camera = DirectX::XMLoadFloat4x4(&view);
-		DirectX::XMMATRIX result = XMMatrixMultiply(translation, temp_camera);
+		DirectX::XMMATRIX result = XMMatrixMultiply(temp_camera, translation);
 		XMStoreFloat4x4(&view, result);
 	}
 	if (GetAsyncKeyState(VK_SPACE)) {//Space - Move Up
-		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, forwardSpeed, 0.0f);
+		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, -forwardSpeed, 0.0f);
 		DirectX::XMMATRIX temp_camera = DirectX::XMLoadFloat4x4(&view);
-		DirectX::XMMATRIX result = XMMatrixMultiply(translation, temp_camera);
+		DirectX::XMMATRIX result = XMMatrixMultiply(temp_camera, translation);
 		XMStoreFloat4x4(&view, result);
 	}
 	if (GetAsyncKeyState(VK_LSHIFT)) {//Shift - Move Down
-		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, -forwardSpeed, 0.0f);
+		DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, forwardSpeed, 0.0f);
 		DirectX::XMMATRIX temp_camera = DirectX::XMLoadFloat4x4(&view);
-		DirectX::XMMATRIX result = XMMatrixMultiply(translation, temp_camera);
+		DirectX::XMMATRIX result = XMMatrixMultiply(temp_camera, translation);
 		XMStoreFloat4x4(&view, result);
 	}
+	if (GetAsyncKeyState(VK_RIGHT)) {//Tab - rotate right
+	   //////////////////////////////////////////////////
+		DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationY(-rotationSpeed);
+		DirectX::XMMATRIX temp_camera = DirectX::XMLoadFloat4x4(&view);
+		DirectX::XMMATRIX result = XMMatrixMultiply(temp_camera, rotationMatrix);
+		XMStoreFloat4x4(&view, result);
+	}
+
+	if (GetAsyncKeyState(VK_LEFT)) {//Tab - rotate left
+
+		DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationY(rotationSpeed);
+		DirectX::XMMATRIX temp_camera = DirectX::XMLoadFloat4x4(&view);
+		DirectX::XMMATRIX result = XMMatrixMultiply(temp_camera, rotationMatrix);
+		XMStoreFloat4x4(&view, result);
+	}
+
+	if (GetAsyncKeyState(VK_UP)) {//up arrow - rotate up
+
+		DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationX(rotationSpeed);
+		DirectX::XMMATRIX temp_camera = DirectX::XMLoadFloat4x4(&view);
+		DirectX::XMMATRIX result = XMMatrixMultiply(temp_camera, rotationMatrix);
+		XMStoreFloat4x4(&view, result);
+	}
+
+	if (GetAsyncKeyState(VK_DOWN)) {//Tab - rotate down
+
+		DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationX(-rotationSpeed);
+		DirectX::XMMATRIX temp_camera = DirectX::XMLoadFloat4x4(&view);
+		DirectX::XMMATRIX result = XMMatrixMultiply(temp_camera, rotationMatrix);
+		XMStoreFloat4x4(&view, result);
+	}
+
+
+
+
 }
