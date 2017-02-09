@@ -57,54 +57,85 @@ bool FBXExport::LoadScene(const char* inFileName, const char* inOutputPath)
 
 	return true;
 }
+bool FBXExport::LoadScene(const char* inFileName)
+{
+	LARGE_INTEGER start;
+	LARGE_INTEGER end;
+	mInputFilePath = inFileName;
+//	mOutputFilePath = inOutputPath;
 
-//void FBXExport::ExportFBX()
-//{
-//	LARGE_INTEGER start;
-//	LARGE_INTEGER end;
-//
-//	// Get the clean name of the model
-//	std::string genericFileName = Utilities::GetFileName(mInputFilePath);
-//	genericFileName = Utilities::RemoveSuffix(genericFileName);
-//
-//	QueryPerformanceCounter(&start);
-//	ProcessSkeletonHierarchy(mFBXScene->GetRootNode());
-//	if (mSkeleton.mJoints.empty())
-//	{
-//		mHasAnimation = false;
-//	}
-//
-//	std::cout << "\n\n\n\nExporting Model:" << genericFileName << "\n";
-//	QueryPerformanceCounter(&end);
-//	std::cout << "Processing Skeleton Hierarchy: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
-//
-//	QueryPerformanceCounter(&start);
-//	ProcessGeometry(mFBXScene->GetRootNode());
-//	QueryPerformanceCounter(&end);
-//	std::cout << "Processing Geometry: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
-//
-//	QueryPerformanceCounter(&start);
-//	Optimize();
-//	QueryPerformanceCounter(&end);
-//	std::cout << "Optimization: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
-//	//PrintMaterial();
-//	std::cout << "\n\n";
-//
-//
-//
-//	std::string outputMeshName = mOutputFilePath + genericFileName + ".itpmesh";
-//	std::ofstream meshOutput(outputMeshName);
-//	WriteMeshToStream(meshOutput);
-//
-//	if (mHasAnimation)
-//	{
-//		std::string outputNnimName = mOutputFilePath + genericFileName + ".itpanim";
-//		std::ofstream animOutput(outputNnimName);
-//		WriteAnimationToStream(animOutput);
-//	}
-//	CleanupFbxManager();
-//	std::cout << "\n\nExport Done!\n";
-//}
+	QueryPerformanceCounter(&start);
+	FbxImporter* fbxImporter = FbxImporter::Create(mFBXManager, "myImporter");
+
+	if (!fbxImporter)
+	{
+		return false;
+	}
+
+	if (!fbxImporter->Initialize(inFileName, -1, mFBXManager->GetIOSettings()))
+	{
+		return false;
+	}
+
+	if (!fbxImporter->Import(mFBXScene))
+	{
+		return false;
+	}
+	fbxImporter->Destroy();
+	QueryPerformanceCounter(&end);
+	std::cout << "Loading FBX File: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
+
+	return true;
+}
+
+
+void FBXExport::ExportFBX()
+{
+	LARGE_INTEGER start;
+	LARGE_INTEGER end;
+
+	// Get the clean name of the model
+	std::string genericFileName = Utilities::GetFileName(mInputFilePath);
+	genericFileName = Utilities::RemoveSuffix(genericFileName);
+
+	QueryPerformanceCounter(&start);
+	ProcessSkeletonHierarchy(mFBXScene->GetRootNode());
+	if (mSkeleton.mJoints.empty())
+	{
+		mHasAnimation = false;
+	}
+
+	std::cout << "\n\n\n\nExporting Model:" << genericFileName << "\n";
+	QueryPerformanceCounter(&end);
+	std::cout << "Processing Skeleton Hierarchy: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
+
+	QueryPerformanceCounter(&start);
+	ProcessGeometry(mFBXScene->GetRootNode());
+	QueryPerformanceCounter(&end);
+	std::cout << "Processing Geometry: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
+
+	QueryPerformanceCounter(&start);
+	Optimize();
+	QueryPerformanceCounter(&end);
+	std::cout << "Optimization: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
+	//PrintMaterial();
+	std::cout << "\n\n";
+
+
+
+	std::string outputMeshName = mOutputFilePath + genericFileName + ".itpmesh";
+	std::ofstream meshOutput(outputMeshName);
+	WriteMeshToStream(meshOutput);
+
+	if (mHasAnimation)
+	{
+		std::string outputNnimName = mOutputFilePath + genericFileName + ".itpanim";
+		std::ofstream animOutput(outputNnimName);
+		WriteAnimationToStream(animOutput);
+	}
+	CleanupFbxManager();
+	std::cout << "\n\nExport Done!\n";
+}
 
 void FBXExport::ProcessGeometry(FbxNode* inNode)
 {
@@ -130,6 +161,9 @@ void FBXExport::ProcessGeometry(FbxNode* inNode)
 		ProcessGeometry(inNode->GetChild(i));
 	}
 }
+
+
+
 
 void FBXExport::ProcessSkeletonHierarchy(FbxNode* inRootNode)
 {
@@ -159,6 +193,15 @@ void FBXExport::ProcessSkeletonHierarchyRecursively(FbxNode* inNode, int inDepth
 void FBXExport::ProcessControlPoints(FbxNode* inNode)
 {
 	FbxMesh* currMesh = inNode->GetMesh();
+
+	/////// Insert Stuff
+	if (currMesh == nullptr)
+	{
+		inNode->GetChildCount(false);
+		currMesh = inNode->GetChild(0)->GetMesh();
+	}
+
+
 	unsigned int ctrlPointCount = currMesh->GetControlPointsCount();
 	for (unsigned int i = 0; i < ctrlPointCount; ++i)
 	{
@@ -281,6 +324,16 @@ unsigned int FBXExport::FindJointIndexUsingName(const std::string& inJointName)
 void FBXExport::ProcessMesh(FbxNode* inNode)
 {
 	FbxMesh* currMesh = inNode->GetMesh();
+
+	if (currMesh == nullptr)
+	{
+		int stuff = 0;
+		stuff = inNode->GetChildCount(false);
+		currMesh = inNode->GetChild(0)->GetMesh();
+	}
+
+
+
 
 	mTriangleCount = currMesh->GetPolygonCount();
 	int vertexCounter = 0;

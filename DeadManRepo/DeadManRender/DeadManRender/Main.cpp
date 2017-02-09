@@ -1,5 +1,10 @@
 #include <Windows.h>
 #include <d3d11.h>
+#include <string>
+
+#include "../FBX_Exporter/DLLTransit.h"
+
+
 #pragma comment (lib, "d3d11.lib")
 #define Width_W 1080
 #define Height_W 720
@@ -64,7 +69,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	DeviceContext->RSSetViewports(1, &ViewPort);
 	
 	
+	EXP::DLLTransit LoadStuff;
+	std::string fileOne("..\\AnimatedAssests\\AnimatedBox\\Box_Idle.fbx");
 
+	std::vector<VertexInfo> VertStuff;
+
+	LoadStuff.getVerticies(VertStuff, fileOne.c_str());
+
+	// this is how it will look.
+//	VertStuff[0].vert.x;
+	
 
 	MSG msg = { 0 };
 	while (TRUE)

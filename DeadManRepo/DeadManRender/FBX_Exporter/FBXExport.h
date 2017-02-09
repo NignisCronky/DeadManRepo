@@ -6,6 +6,7 @@
 #include <iomanip>
 
 
+
 #ifdef FBXEXPORT_EXPORTS
 #define DLLEXPORT __declspec(dllexport)
 #else
@@ -21,7 +22,9 @@ public:
 
 	bool Initialize();
 	bool LoadScene(const char* inFileName, const char* inOutputPath);
-//	void ExportFBX();
+	bool LoadScene(const char* inFileName);
+	void ExportFBX();
+	FbxScene* getScene() { return mFBXScene; }
 
 private:
 	FbxManager* mFBXManager;
@@ -39,15 +42,17 @@ private:
 	std::string mAnimationName;
 	LARGE_INTEGER mCPUFreq;
 
+public:
+	void ProcessControlPoints(FbxNode* inNode);
+	void ProcessMesh(FbxNode* inNode);
+	std::vector<PNTIWVertex> getverts() { return mVertices; }
 
 private:
 	void ProcessGeometry(FbxNode* inNode);
 	void ProcessSkeletonHierarchy(FbxNode* inRootNode);
 	void ProcessSkeletonHierarchyRecursively(FbxNode* inNode, int inDepth, int myIndex, int inParentIndex);
-	void ProcessControlPoints(FbxNode* inNode);
 	void ProcessJointsAndAnimations(FbxNode* inNode);
 	unsigned int FindJointIndexUsingName(const std::string& inJointName);
-	void ProcessMesh(FbxNode* inNode);
 	void ReadUV(FbxMesh* inMesh, int inCtrlPointIndex, int inTextureUVIndex, int inUVLayer, DirectX::XMFLOAT2& outUV);
 	void ReadNormal(FbxMesh* inMesh, int inCtrlPointIndex, int inVertexCounter, DirectX::XMFLOAT3& outNormal);
 	void ReadBinormal(FbxMesh* inMesh, int inCtrlPointIndex, int inVertexCounter, DirectX::XMFLOAT3& outBinormal);
