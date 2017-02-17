@@ -49,9 +49,9 @@ public:
 	void ProcessMesh(FbxNode* inNode);
 	std::vector<PNTIWVertex> getverts() { return mVertices; }
 
+	void ProcessSkeletonHierarchy(FbxNode* inRootNode);
 private:
 	void ProcessGeometry(FbxNode* inNode);
-	void ProcessSkeletonHierarchy(FbxNode* inRootNode);
 	void ProcessSkeletonHierarchyRecursively(FbxNode* inNode, int inDepth, int myIndex, int inParentIndex);
 	void ProcessJointsAndAnimations(FbxNode* inNode);
 	unsigned int FindJointIndexUsingName(const std::string& inJointName);

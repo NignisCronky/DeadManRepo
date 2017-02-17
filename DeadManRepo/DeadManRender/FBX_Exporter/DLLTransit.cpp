@@ -76,7 +76,7 @@ void EXP::DLLTransit::saveFiletoBin(const char* inFileName, const char* binFileN
 
 	exporter->ProcessControlPoints(tmpNode);
 	exporter->ProcessMesh(tmpNode);
-	
+	exporter->ProcessSkeletonHierarchy(tmpNode);
 
 
 
