@@ -39,6 +39,14 @@ public:
 	ID3D11Buffer *_VertexBuffer;                // the pointer to the vertex buffer
 	ID3D11Buffer *_ConstantBuffer;		// the pointer to the constant buffer
 
+	ID3D11RasterizerState *_RSwire; //the pointer to the raster state
+	ID3D11RasterizerState *_RSsolid; //the pointer to the raster state
+
+
+	bool wire = false;
+
+
+
 
 	void Clean() {
 		Layout->Release();
@@ -46,6 +54,8 @@ public:
 		PS->Release();
 		_VertexBuffer->Release();
 		_ConstantBuffer->Release();
+		_RSwire->Release();
+		_RSsolid->Release();
 	}
 	void UpdateStuff(ModelViewProjectionConstantBuffer &cbp, ID3D11DeviceContext* _devcon)
 	{
@@ -68,6 +78,10 @@ public:
 		_devcon->VSSetShader(VS, 0, 0);
 		_devcon->PSSetShader(PS, 0, 0);
 		_devcon->IASetInputLayout(Layout);
+
+
+		(wire == true) ? _devcon->RSSetState(_RSwire) : _devcon->RSSetState(_RSsolid);
+
 
 	}
 	void Render(ModelViewProjectionConstantBuffer &cb, ID3D11DeviceContext* _devcon)
@@ -95,9 +109,9 @@ public:
 		dev->CreateInputLayout(ied, 2, TVS, sizeof(TVS), &Layout);
 	}
 
-	void InitVerts(ID3D11Device *dev, ID3D11DeviceContext* devcon)
+	void InitVerts(ID3D11Device *dev, ID3D11DeviceContext* devcon, VERTEX* object, unsigned size_)
 	{
-		size = 6;
+		/*size = 6;
 		VERTEX OurVertices[] =
 		{
 			{ 0.0f, -0.5f, 0.0f,{ 1.0f, 0.0f, 0.0f, 1.0f } },
@@ -108,8 +122,8 @@ public:
 			{ 1.0f, -0.5f, 1.0f,{ 0.0f, 0.0f, 1.0f, 1.0f } }
 
 
-		};
-
+		};*/
+		size = size_;
 
 		// create the vertex buffer
 		D3D11_BUFFER_DESC bd;
@@ -124,11 +138,11 @@ public:
 
 		D3D11_MAPPED_SUBRESOURCE ms;
 		devcon->Map(_VertexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
-		memcpy(ms.pData, OurVertices, sizeof(OurVertices));                 // copy the data
+		memcpy(ms.pData, object, size*sizeof(VERTEX));                 // copy the data
 		devcon->Unmap(_VertexBuffer, NULL);                                      // unmap the buffer
 		ZeroMemory(&bd, sizeof(bd));
 	}
-
+	//VertStuff
 
 	void InitVertsText(ID3D11Device *dev, ID3D11DeviceContext* devcon)
 	{
@@ -161,6 +175,12 @@ public:
 	}
 
 
+	void ToggleWireFrame()
+	{
+		wire = !wire;
+	}
+
+
 
 	void IntiConstantBuffer(ID3D11Device *dev)
 	{
@@ -175,12 +195,23 @@ public:
 		dev->CreateBuffer(&bd, NULL, &_ConstantBuffer);						// create the buffer
 	}
 
-	void InitEverything(ID3D11Device *kdev, ID3D11DeviceContext* kdevcon)
+	void InitEverything(ID3D11Device *kdev, ID3D11DeviceContext* kdevcon, std::vector<VERTEX> t)
 	{
 		InitShadders(kdev);
 		InitInputLayout(kdev);
-		InitVerts(kdev,kdevcon);
+		InitVerts(kdev,kdevcon,t.data(),t.size());
 		IntiConstantBuffer(kdev);
+
+		D3D11_RASTERIZER_DESC Temp;
+		ZeroMemory(&Temp, sizeof(Temp));
+		Temp.CullMode = D3D11_CULL_BACK;
+		Temp.FillMode = D3D11_FILL_SOLID;
+		kdev->CreateRasterizerState(&Temp,&_RSsolid);
+		ZeroMemory(&Temp, sizeof(Temp));
+		Temp.CullMode = D3D11_CULL_BACK;
+		Temp.FillMode = D3D11_FILL_WIREFRAME;
+		kdev->CreateRasterizerState(&Temp, &_RSwire);
+		wire = false;
 	}
 };
 
