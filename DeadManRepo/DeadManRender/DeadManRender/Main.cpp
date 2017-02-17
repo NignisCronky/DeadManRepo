@@ -120,17 +120,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	//loading in model
 
-	EXP::DLLTransit LoadStuff;
-	std::string fileOne("..\\AnimatedAssests\\AnimatedBox\\Box_Idle.fbx");
+
+
+
+
 
 	std::vector<VertexInfo> VertStuff;
+	FBXRun(VertStuff);
 
-
-
-
-
-
-	LoadStuff.getVerticies(VertStuff, fileOne.c_str());
 
 	std::vector<VERTEX> Verts;
 
@@ -157,8 +154,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	InitRenderOBjects(hWnd, Verts);
 	//InitD3D(hWnd);
 
-	std::vector<VertexInfo> VertStuff;
-	FBXRun(VertStuff);
 
 	InitCamera();	
 
