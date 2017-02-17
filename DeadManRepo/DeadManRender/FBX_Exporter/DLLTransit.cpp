@@ -76,6 +76,10 @@ void EXP::DLLTransit::saveFiletoBin(const char* inFileName, const char* binFileN
 
 	exporter->ProcessControlPoints(tmpNode);
 	exporter->ProcessMesh(tmpNode);
+	
+
+
+
 
 	std::vector<PNTIWVertex> SendData = exporter->getverts();
 
@@ -114,6 +118,12 @@ void EXP::DLLTransit::saveFiletoBin(const char* inFileName, const char* binFileN
 
 			toReturn.uv.u = SendData[i].mUV.x;
 			toReturn.uv.v = SendData[i].mUV.y;
+
+
+
+			
+
+
 
 			outbinFile.write((char*)&toReturn, sizeof(VertexInfo));
 		}
