@@ -22,12 +22,14 @@
     <ClCompile Include="AnimatedMesh.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="ReadFiles.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimatedMesh.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="ReadFiles.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="RenderStructs.h" />
     <ClInclude Include="StaticMesh.h" />

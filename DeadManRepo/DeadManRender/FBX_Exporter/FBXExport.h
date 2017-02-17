@@ -26,7 +26,9 @@ public:
 	void ExportFBX();
 	FbxScene* getScene() { return mFBXScene; }
 
+
 private:
+
 	FbxManager* mFBXManager;
 	FbxScene* mFBXScene;
 	std::string mInputFilePath;

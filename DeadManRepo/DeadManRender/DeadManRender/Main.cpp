@@ -71,10 +71,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	EXP::DLLTransit LoadStuff;
 	std::string fileOne("..\\AnimatedAssests\\AnimatedBox\\Box_Idle.fbx");
+	std::string binSaveLocation("fbx.bin");
+
+//	const char* charPnter = fileOne.c_str();
+//	std::string a;
+//	int i = 0;
+//	while (charPnter[i] != '\0') {
+//		a += charPnter[i];
+//		i++;
+//	}
 
 	std::vector<VertexInfo> VertStuff;
 
-	LoadStuff.getVerticies(VertStuff, fileOne.c_str());
+//	LoadStuff.getVerticies(VertStuff, fileOne.c_str());
+	LoadStuff.saveFiletoBin(fileOne.c_str(), binSaveLocation.c_str());
+
+	LoadStuff.loadFilefromBin(binSaveLocation.c_str(), VertStuff);
 
 	// this is how it will look.
 //	VertStuff[0].vert.x;
