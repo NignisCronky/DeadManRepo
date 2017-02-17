@@ -1,5 +1,6 @@
 
 #include "RenderObjects.h"
+#include "../FBX_Exporter/DLLTransit.h"
 
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
@@ -51,6 +52,19 @@ void UpdateCamera();
 void CameraUPdadte();
 void InitCamera();
 
+void FBXRun(std::vector<VertexInfo> &returnData)
+{
+	EXP::DLLTransit LoadStuffOne;
+	std::string fileOne("..\\AnimatedAssests\\AnimatedBox\\Box_Idle.fbx");
+	std::string binSaveOneLocation("fbx.bin");
+
+//	std::vector<VertexInfo> VertStuff;
+
+	LoadStuffOne.saveFiletoBin(fileOne.c_str(), binSaveOneLocation.c_str());
+
+	LoadStuffOne.loadFilefromBin(binSaveOneLocation.c_str(), returnData);
+}
+
 
 
 
@@ -90,32 +104,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	ShowWindow(hWnd, nCmdShow);
 
-	std::string binSaveLocation("fbx.bin");
-
 	InitRenderOBjects(hWnd);
 	//InitD3D(hWnd);
-//	const char* charPnter = fileOne.c_str();
-//	std::string a;
-//	int i = 0;
-//	while (charPnter[i] != '\0') {
-//		a += charPnter[i];
-//		i++;
-//	}
 
 	std::vector<VertexInfo> VertStuff;
+	FBXRun(VertStuff);
 
-//	LoadStuff.getVerticies(VertStuff, fileOne.c_str());
-	LoadStuff.saveFiletoBin(fileOne.c_str(), binSaveLocation.c_str());
-	InitCamera();
+	InitCamera();	
 
-
-	LoadStuff.loadFilefromBin(binSaveLocation.c_str(), VertStuff);
-
-	// this is how it will look.
-//	VertStuff[0].vert.x;
-	
-
-	MSG msg = { 0 };
+//	MSG msg = { 0 };
 	MSG msg;
 	while (TRUE)
 	{
