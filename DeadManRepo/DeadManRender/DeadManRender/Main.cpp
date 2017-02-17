@@ -1,4 +1,4 @@
-#include "../FBX_Exporter/"
+
 #include "RenderObjects.h"
 
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
