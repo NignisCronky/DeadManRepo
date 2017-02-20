@@ -1,6 +1,5 @@
-
-#include "RenderObjects.h"
 #include "../FBX_Exporter/DLLTransit.h"
+#include "RenderObjects.h"
 
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
@@ -42,7 +41,7 @@ void InitGraphics(void);    // creates the shape to render
 void InitPipeline(void);    // loads and prepares the shaders
 
 
-void InitRenderOBjects(HWND hWnd);
+void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess);
 void RenderRenderObjects();
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -72,6 +71,20 @@ void FBXRun(std::vector<VertexInfo> &returnData)
 RenderObjects Panel;
 
 ///////
+
+
+
+
+
+
+
+
+
+//export stuff
+
+//
+
+
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -104,11 +117,43 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	ShowWindow(hWnd, nCmdShow);
 
-	InitRenderOBjects(hWnd);
-	//InitD3D(hWnd);
+	
+	//loading in model
+
+
+
+
+
 
 	std::vector<VertexInfo> VertStuff;
 	FBXRun(VertStuff);
+
+
+	std::vector<VERTEX> Verts;
+
+
+	for (unsigned i = 0; i < VertStuff.size(); i++)
+	{
+		VERTEX temp;
+		temp.X = VertStuff[i].vert.x * 0.1f +0.5f;
+		temp.Y = VertStuff[i].vert.y* 0.1f;
+		temp.Z = VertStuff[i].vert.z* 0.1f;
+
+		float col[4] = { 1.0f,0.2f , 0.0f, 1.0f };
+		temp.Color[0] = col[0];
+		temp.Color[1] = col[1];
+		temp.Color[2] = col[2];
+		temp.Color[3] = col[3];
+
+		Verts.push_back(temp);
+	}
+
+	///////////////
+
+
+	InitRenderOBjects(hWnd, Verts);
+	//InitD3D(hWnd);
+
 
 	InitCamera();	
 
@@ -207,7 +252,7 @@ void InitD3D(HWND hWnd)
 	InitGraphics();
 }
 
-void InitRenderOBjects(HWND hWnd) {
+void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 	// create a struct to hold information about the swap chain
 	DXGI_SWAP_CHAIN_DESC scd;
 
@@ -262,7 +307,7 @@ void InitRenderOBjects(HWND hWnd) {
 
 
 
-	Panel.InitEverything(dev, devcon);
+	Panel.InitEverything(dev, devcon, vertesess);
 
 }
 void RenderRenderObjects() {
@@ -574,6 +619,9 @@ void CameraUPdadte()
 	}
 
 
-
+	if (GetAsyncKeyState(VK_RETURN)&1)// enter key - toggle wire frame
+	{
+		Panel.ToggleWireFrame();
+	}
 
 }
