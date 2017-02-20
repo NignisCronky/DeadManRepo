@@ -52,7 +52,7 @@ public:
 	std::vector<PNTIWVertex> getverts() { return mVertices; }
 	void ProcessSkeletonHierarchy(FbxNode* inRootNode);
 
-	void ProcessSkeletonHierarchy(FbxNode* inRootNode);
+//	void ProcessSkeletonHierarchy(FbxNode* inRootNode);
 private:
 	void ProcessGeometry(FbxNode* inNode);
 	void ProcessSkeletonHierarchyRecursively(FbxNode* inNode, int inDepth, int myIndex, int inParentIndex);
