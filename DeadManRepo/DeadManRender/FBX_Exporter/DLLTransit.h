@@ -36,18 +36,28 @@ struct UnsignedInt4
 };
 struct Bone
 {
-	UnsignedInt4 x;
-	Float4 y;
+	UnsignedInt4 BlendingIndex;
+	Float4 BlendingWeight;
 };
 
 struct VertexInfo
 {
+	unsigned int numIndicies;
+	std::vector<float> blendWeights;
+	std::vector<int> boneIndices;
+
+//	unsigned int CtrlPntIndeics;
+
 	Float3 vert;
 	Float3 norm;
 	Float2 uv;
-	Bone bones;
+//	Bone bones;
 };
 
+struct BoneInfo
+{
+
+};
 
 
 
@@ -58,7 +68,7 @@ namespace EXP
 	private:
 		bool LoadScene(const char* inFileName, const char* inOutputPath);
 		bool LoadScene(const char* inFileName);
-		void getVerticies(std::vector<VertexInfo> &returnData, const char* inFileName);
+//		void getVerticies(std::vector<VertexInfo> &returnData, const char* inFileName);
 	public:
 
 //		std::vector<VertexInfo> getVerticies(std::vector<VertexInfo> &returnData, const char* inFileName);

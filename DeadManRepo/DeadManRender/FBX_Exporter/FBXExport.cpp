@@ -88,6 +88,17 @@ bool FBXExport::LoadScene(const char* inFileName)
 	return true;
 }
 
+void FBXExport::InitFBX()
+{
+	ProcessSkeletonHierarchy(mFBXScene->GetRootNode());
+	if (mSkeleton.mJoints.empty())
+	{
+		mHasAnimation = false;
+	}
+	ProcessGeometry(mFBXScene->GetRootNode());
+//	Optimize();
+}
+
 
 void FBXExport::ExportFBX()
 {
@@ -133,7 +144,7 @@ void FBXExport::ExportFBX()
 		std::ofstream animOutput(outputNnimName);
 		WriteAnimationToStream(animOutput);
 	}
-	CleanupFbxManager();
+//	CleanupFbxManager();
 	std::cout << "\n\nExport Done!\n";
 }
 
@@ -295,16 +306,16 @@ void FBXExport::ProcessJointsAndAnimations(FbxNode* inNode)
 	// affecting them.
 	// For a normal renderer, there are usually 4 joints
 	// I am adding more dummy joints if there isn't enough
-	BlendingIndexWeightPair currBlendingIndexWeightPair;
-	currBlendingIndexWeightPair.mBlendingIndex = 0;
-	currBlendingIndexWeightPair.mBlendingWeight = 0;
-	for (auto itr = mControlPoints.begin(); itr != mControlPoints.end(); ++itr)
-	{
-		for (unsigned int i = itr->second->mBlendingInfo.size(); i <= 4; ++i)
-		{
-			itr->second->mBlendingInfo.push_back(currBlendingIndexWeightPair);
-		}
-	}
+//	BlendingIndexWeightPair currBlendingIndexWeightPair;
+//	currBlendingIndexWeightPair.mBlendingIndex = 0;
+//	currBlendingIndexWeightPair.mBlendingWeight = 0;
+//	for (auto itr = mControlPoints.begin(); itr != mControlPoints.end(); ++itr)
+//	{
+//		for (unsigned int i = itr->second->mBlendingInfo.size(); i <= 4; ++i)
+//		{
+//			itr->second->mBlendingInfo.push_back(currBlendingIndexWeightPair);
+//		}
+//	}
 }
 
 unsigned int FBXExport::FindJointIndexUsingName(const std::string& inJointName)
@@ -323,6 +334,7 @@ unsigned int FBXExport::FindJointIndexUsingName(const std::string& inJointName)
 
 void FBXExport::ProcessMesh(FbxNode* inNode)
 {
+	// we came to far
 	FbxMesh* currMesh = inNode->GetMesh();
 
 	if (currMesh == nullptr)
