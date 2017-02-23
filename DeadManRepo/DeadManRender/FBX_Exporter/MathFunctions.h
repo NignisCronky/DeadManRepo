@@ -224,6 +224,7 @@ struct Keyframe
 	FbxLongLong mFrameNum;
 	FbxAMatrix mGlobalTransform;
 	Keyframe* mNext;
+	float keyFrameTime;
 
 	Keyframe() :
 		mNext(nullptr)
@@ -235,6 +236,7 @@ struct Joint
 {
 	std::string mName;
 	int mParentIndex;
+	int mMyIndex;
 	FbxAMatrix mGlobalBindposeInverse;
 	Keyframe* mAnimation;
 	FbxNode* mNode;
