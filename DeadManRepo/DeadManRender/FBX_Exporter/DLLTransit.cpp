@@ -131,6 +131,7 @@ void EXP::DLLTransit::saveFiletoBin(const char* inFileName, const char* binFileN
 
 		outbinFile.close();
 	}
+//	delete exporter;
 }
 
 void EXP::DLLTransit::loadFilefromBin(const char* inFileName, std::vector<VertexInfo> &returnData, std::vector<BoneInfo> &returnBone, Animation* animation)

@@ -25,6 +25,7 @@
     <ClCompile Include="RenderObjects.cpp" />
     <ClCompile Include="ReadFiles.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
+    <ClCompile Include="XTime.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimatedMesh.h" />
@@ -32,7 +33,9 @@
     <ClInclude Include="RenderObjects.h" />
     <ClInclude Include="ReadFiles.h" />
     <ClInclude Include="RenderStructs.h" />
+    <ClInclude Include="simplemath.h" />
     <ClInclude Include="StaticMesh.h" />
+    <ClInclude Include="XTime.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="FBXVertexShader.hlsl">

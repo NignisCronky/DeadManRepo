@@ -1,5 +1,7 @@
 #include "../FBX_Exporter/DLLTransit.h"
 #include "RenderObjects.h"
+#include "simplemath.h"
+#include "XTime.h"
 
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
@@ -13,7 +15,26 @@ ID3D11PixelShader *pPS;                // the pointer to the pixel shader
 ID3D11Buffer *VertexBuffer;                // the pointer to the vertex buffer
 ID3D11Buffer *ConstantBuffer;		// the pointer to the constant buffer
 
+/////////////////////////////////////////////
+SEND_TO_SCENE toSceneShader;
+//ID3D11Buffer *constantSceneBuffer = nullptr;
+DirectX::XMMATRIX worldTranslate;
 
+#define BACKBUFFER_WIDTH	1280 // 1100
+#define BACKBUFFER_HEIGHT	720 // 800
+
+#define NEAR_PLANE			0.1f
+#define FAR_PLANE			300.0f
+#define FOV_DEGREE			65.0f
+
+#define CAMERAMOVEMENTSPEED 0.5f
+
+XTime						time;
+POINT						currPoint;
+
+#define LOGANOSCAMERA 0
+#define TORONTOCAMERA 1
+/////////////////////////////////////////////
 
 
 DirectX::XMFLOAT4X4 view;
@@ -50,6 +71,12 @@ void UpdatePOS();
 void UpdateCamera();
 void CameraUPdadte();
 void InitCamera();
+/////////////////////////////////// Toronto Functions
+void InitializeScene();
+void KeyboardFunctions();
+void MouseFunctions();
+void UpdateviewMatrix();
+///////////////////////////////////
 
 void FBXRun(std::vector<VertexInfo> &returnData, std::vector<BoneInfo> &returnBone, Animation* animation)
 {
@@ -102,7 +129,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.lpszClassName = "WindowClass1";
 
 	RegisterClassEx(&wc);
-	RECT wr = { (long)0, (long)0, (long)1100, (long)800 };
+	RECT wr = { (long)0, (long)0, (long)BACKBUFFER_WIDTH, (long)BACKBUFFER_HEIGHT };
 	//SCREEN SIZE
 	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
 	hWnd = CreateWindowEx(NULL,
@@ -156,10 +183,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	InitRenderOBjects(hWnd, Verts);
 	//InitD3D(hWnd);
 
-
+#if	LOGANOSCAMERA
 	InitCamera();	
-
-//	MSG msg = { 0 };
+#elif TORONTOCAMERA
+	InitializeScene();
+#endif
+	//	MSG msg = { 0 };
 	MSG msg;
 	while (TRUE)
 	{
@@ -244,8 +273,8 @@ void InitD3D(HWND hWnd)
 
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = 1100;
-	viewport.Height = 800;
+	viewport.Width = BACKBUFFER_WIDTH;
+	viewport.Height = BACKBUFFER_HEIGHT;
 
 	devcon->RSSetViewports(1, &viewport);
 
@@ -302,8 +331,8 @@ void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = 1100;
-	viewport.Height = 800;
+	viewport.Width = BACKBUFFER_WIDTH;
+	viewport.Height = BACKBUFFER_HEIGHT;
 
 	devcon->RSSetViewports(1, &viewport);
 
@@ -318,7 +347,14 @@ void RenderRenderObjects() {
 	// clear the back buffer to a deep blue
 	devcon->ClearRenderTargetView(backbuffer, Color);
 
+#if	LOGANOSCAMERA
 	CameraUPdadte();
+#elif TORONTOCAMERA
+	time.Signal();
+	KeyboardFunctions();
+	MouseFunctions();
+#endif
+	
 
 	ModelViewProjectionConstantBuffer lcb;
 	DirectX::XMStoreFloat4x4(&lcb.model, DirectX::XMMatrixIdentity());
@@ -547,7 +583,7 @@ void InitCamera()
 	//DirectX::XMLoadFloat4x4(&view)
 	//DirectX::XMStoreFloat4x4(&view, DirectX::XMMatrixMultiply(DirectX::XMMatrixRotationX((float)cos((double)45.0f)), DirectX::XMLoadFloat4x4(&view)));
 
-	DirectX::XMStoreFloat4x4(&proj, DirectX::XMMatrixPerspectiveFovLH(viewAngle, (800.0f / 1100.0f), nearClip, farClip));
+	DirectX::XMStoreFloat4x4(&proj, DirectX::XMMatrixPerspectiveFovLH(viewAngle, ((float)BACKBUFFER_HEIGHT / (float)BACKBUFFER_WIDTH), nearClip, farClip));
 }
 
 void CameraUPdadte()
@@ -627,3 +663,114 @@ void CameraUPdadte()
 	}
 
 }
+
+#if TORONTOCAMERA
+void InitializeScene()
+{
+#pragma region Matrix and Projection Matrix
+	ZeroMemory(&toSceneShader, sizeof(SEND_TO_SCENE));
+	ZeroMemory(&worldTranslate, sizeof(DirectX::XMMATRIX));
+
+	worldTranslate = DirectX::XMMatrixIdentity();
+
+	toSceneShader.viewMatrix = DirectX::XMMatrixIdentity();
+
+	toSceneShader.viewMatrix = XMMatrixInverse(0, toSceneShader.viewMatrix);
+
+	//	toSceneShader.projectionMatrix = XMMatrixProjection
+	GetProjectionMatrix_4X4(FOV_DEGREE, NEAR_PLANE, FAR_PLANE, ((float)BACKBUFFER_HEIGHT / (float)BACKBUFFER_WIDTH), toSceneShader.projectionMatrix);
+	for (size_t i = 0; i < 4; i++)
+	{
+		for (size_t j = 0; j < 4; j++)
+		{
+			proj.m[i][j] = toSceneShader.projectionMatrix.r[i].m128_f32[j];
+			view.m[i][j] = toSceneShader.viewMatrix.r[i].m128_f32[j];
+		}
+	}
+#pragma endregion
+}
+void KeyboardFunctions()
+{
+	float _time = (float)time.Delta();
+
+	float _w = toSceneShader.viewMatrix.r[3].m128_f32[2];
+	if (!_w)
+		_w = 0.000001f;
+
+	if (GetAsyncKeyState('S'))	// G
+	{
+		toSceneShader.viewMatrix.r[3].m128_f32[2] += 3 * _time * CAMERAMOVEMENTSPEED;
+	}
+	if (GetAsyncKeyState('W') || GetAsyncKeyState(VK_SPACE))  // T
+	{
+		toSceneShader.viewMatrix.r[3].m128_f32[2] -= 3 * _time * CAMERAMOVEMENTSPEED;
+	}
+	if (GetAsyncKeyState('D'))
+	{
+		toSceneShader.viewMatrix.r[3].m128_f32[0] -= 3 * _time * CAMERAMOVEMENTSPEED;
+	}
+	if (GetAsyncKeyState('A'))
+	{
+		toSceneShader.viewMatrix.r[3].m128_f32[0] += 3 * _time * CAMERAMOVEMENTSPEED;
+	}
+	if (GetAsyncKeyState(VK_RETURN) & 1)// enter key - toggle wire frame
+	{
+		Panel.ToggleWireFrame();
+	}
+	UpdateviewMatrix();
+}
+void MouseFunctions()
+{
+	//	float _time = (float)time.Delta();
+	if (GetAsyncKeyState(VK_LBUTTON))
+	{
+		// Take Invverse
+		toSceneShader.viewMatrix = XMMatrixInverse(0, toSceneShader.viewMatrix);
+
+		// Save Position
+		DirectX::XMMATRIX StoredMatrix = toSceneShader.viewMatrix;
+
+		// Place Positions at 0
+		for (int i = 0; i < 3; i++)
+		{
+			toSceneShader.viewMatrix.r[3].m128_f32[i] = 0;
+		}
+		POINT NewPoint;
+
+		DirectX::XMMATRIX X_AxisRotation = DirectX::XMMatrixRotationX(0);
+		DirectX::XMMATRIX Y_AxisRotation = DirectX::XMMatrixRotationY(0);
+
+		if (GetCursorPos(&NewPoint))
+		{
+			X_AxisRotation = DirectX::XMMatrixRotationX((NewPoint.y - currPoint.y) * .01f);
+			Y_AxisRotation = DirectX::XMMatrixRotationY((NewPoint.x - currPoint.x) * .01f);
+
+			currPoint = NewPoint;
+		}
+
+		// Multiply Matricies in Reverse Order
+		toSceneShader.viewMatrix = XMMatrixMultiply(toSceneShader.viewMatrix, Y_AxisRotation);
+		toSceneShader.viewMatrix = XMMatrixMultiply(X_AxisRotation, toSceneShader.viewMatrix);
+
+		XMMatrixMultiply(toSceneShader.viewMatrix, Y_AxisRotation);
+		toSceneShader.viewMatrix = XMMatrixMultiply(X_AxisRotation, toSceneShader.viewMatrix);
+
+		// Restore original position
+		toSceneShader.viewMatrix.r[3].m128_f32[0] = StoredMatrix.r[3].m128_f32[0];
+		toSceneShader.viewMatrix.r[3].m128_f32[1] = StoredMatrix.r[3].m128_f32[1];
+		toSceneShader.viewMatrix.r[3].m128_f32[2] = StoredMatrix.r[3].m128_f32[2];
+
+
+		// Inverse it again
+		toSceneShader.viewMatrix = XMMatrixInverse(0, toSceneShader.viewMatrix);
+
+	}
+	else
+		GetCursorPos(&currPoint);
+	UpdateviewMatrix();
+}
+void UpdateviewMatrix()
+{
+	XMStoreFloat4x4(&view, toSceneShader.viewMatrix);
+}
+#endif
