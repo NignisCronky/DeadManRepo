@@ -1,18 +1,15 @@
 #pragma once
 
-//#include <Windows.h>
+#include <Windows.h>
 #include <vector>
 #include <DirectXMath.h>
+#include "Structures.h"
 //using namespace DirectX;
 
 
 #define PI		3.14159f
 
-struct SEND_TO_SCENE
-{
-	DirectX::XMMATRIX viewMatrix;
-	DirectX::XMMATRIX projectionMatrix;
-};
+
 
 float Degrees_To_Radians(float _degrees)
 {

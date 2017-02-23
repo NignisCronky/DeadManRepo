@@ -2,6 +2,7 @@
 #include "RenderObjects.h"
 #include "simplemath.h"
 #include "XTime.h"
+#include "Platform.h"
 
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
@@ -190,7 +191,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif
 	//	MSG msg = { 0 };
 	MSG msg;
-	while (TRUE)
+	ZeroMemory(&msg, sizeof(msg));
+	while (msg.message != WM_QUIT)
 	{
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
