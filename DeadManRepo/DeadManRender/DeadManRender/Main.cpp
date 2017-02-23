@@ -42,7 +42,7 @@ void InitPipeline(void);    // loads and prepares the shaders
 
 
 void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess);
-void RenderRenderObjects();
+void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_);
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -69,6 +69,9 @@ void FBXRun(std::vector<VertexInfo> &returnData, std::vector<BoneInfo> &returnBo
 
 ////////render objects stuff
 RenderObjects Panel;
+
+
+RenderObjects Box;
 
 ///////
 
@@ -127,6 +130,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	std::vector<VertexInfo> VertStuff;
 	std::vector<BoneInfo> BoneStuff;
+
+	
+
+
+
+
 	Animation* animation = nullptr;
 	FBXRun(VertStuff, BoneStuff, animation);
 
@@ -137,9 +146,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	for (unsigned i = 0; i < VertStuff.size(); i++)
 	{
 		VERTEX temp;
-		temp.X = VertStuff[i].vert.x * 0.1f +0.5f;
-		temp.Y = VertStuff[i].vert.y* 0.1f;
-		temp.Z = VertStuff[i].vert.z* 0.1f;
+		temp.X = VertStuff[i].vert.x;
+		temp.Y = VertStuff[i].vert.y;
+		temp.Z = VertStuff[i].vert.z;
 
 		float col[4] = { 1.0f,0.2f , 0.0f, 1.0f };
 		temp.Color[0] = col[0];
@@ -150,6 +159,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		Verts.push_back(temp);
 	}
 
+	for (unsigned i = 0; i < BoneStuff.size(); i++)
+	{
+		BoneStuff[i].transform._41 = BoneStuff[i].transform._41 * 0.1f + 0.5f;
+		BoneStuff[i].transform._41 = BoneStuff[i].transform._42 * 0.1f;
+		BoneStuff[i].transform._41 = BoneStuff[i].transform._43 * 0.1f;
+	}
 	///////////////
 
 
@@ -174,10 +189,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		else
 		{
 			//RenderFrame();
-			RenderRenderObjects();
+			RenderRenderObjects(BoneStuff);
 		}
 	}
 	Panel.Clean();
+	Box.Clean();
 	CleanD3D();
 	return (int)msg.wParam;
 }
@@ -310,15 +326,60 @@ void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 
 
 	Panel.InitEverything(dev, devcon, vertesess);
-
+	for (unsigned i = 0; i < vertesess.size(); i++)
+	{
+		
+		vertesess[i].X *= 0.1f;
+		vertesess[i].Y *= 0.1f;
+		vertesess[i].Z *= 0.1f;
+		vertesess[i].Color[0] = 0.1f;
+		vertesess[i].Color[1] = 0.1f;
+		vertesess[i].Color[2] = 0.76f;
+		vertesess[i].Color[3] = 1.0f;
+	}
+	Box.InitEverything(dev, devcon, vertesess);
 }
-void RenderRenderObjects() {
+void DrawBox(DirectX::XMFLOAT4X4 position)
+{
+	ModelViewProjectionConstantBuffer lcb;
+	//DirectX::XMStoreFloat4x4(&lcb.model, position);
+	lcb.model = position;
+	lcb.projection = proj;
+	lcb.view = view;
+	Box.Render(lcb, devcon);
+}
+void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 
 	float Color[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
 	// clear the back buffer to a deep blue
 	devcon->ClearRenderTargetView(backbuffer, Color);
 
 	CameraUPdadte();
+	
+
+	for (unsigned h = 0; h < BoneStuff_.size(); h++)
+	{
+		DirectX::XMFLOAT4X4 Temp;
+		for (unsigned i = 0; i < 4; i++)
+		{
+			for (unsigned k = 0; k < 4; k++)
+			{
+
+				if (i == 3 && k == 1)
+				{
+					Temp.m[i][k] = -1.0f * BoneStuff_[h].transform.m[i][k];
+				}
+				else
+				{
+				Temp.m[i][k] = BoneStuff_[h].transform.m[i][k];
+				}
+
+			}
+		}		
+		DrawBox(Temp);
+	}
+
+
 
 	ModelViewProjectionConstantBuffer lcb;
 	DirectX::XMStoreFloat4x4(&lcb.model, DirectX::XMMatrixIdentity());
@@ -329,20 +390,6 @@ void RenderRenderObjects() {
 	swapchain->Present(0, 0);
 };
 
-void CleanD3D()
-{
-	// close and release all existing COM objects
-	swapchain->Release();
-	dev->Release();
-	devcon->Release();
-	backbuffer->Release();
-
-	/*pLayout->Release();
-	pVS->Release();
-	pPS->Release();
-	VertexBuffer->Release();
-	ConstantBuffer->Release();*/
-}
 
 void UpdatePOS()
 {
@@ -621,5 +668,19 @@ void InitGraphics()
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;							// allow CPU to write in buffer
 
 	dev->CreateBuffer(&bd, NULL, &ConstantBuffer);						// create the buffer
+}
+void CleanD3D()
+{
+	// close and release all existing COM objects
+	swapchain->Release();
+	dev->Release();
+	devcon->Release();
+	backbuffer->Release();
+
+	/*pLayout->Release();
+	pVS->Release();
+	pPS->Release();
+	VertexBuffer->Release();
+	ConstantBuffer->Release();*/
 }
 #pragma endregion
