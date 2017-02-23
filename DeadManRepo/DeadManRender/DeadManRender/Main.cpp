@@ -16,7 +16,7 @@ ID3D11PixelShader *pPS;                // the pointer to the pixel shader
 ID3D11Buffer *VertexBuffer;                // the pointer to the vertex buffer
 ID3D11Buffer *ConstantBuffer;		// the pointer to the constant buffer
 
-/////////////////////////////////////////////
+									/////////////////////////////////////////////
 SEND_TO_SCENE toSceneShader;
 //ID3D11Buffer *constantSceneBuffer = nullptr;
 DirectX::XMMATRIX worldTranslate;
@@ -85,7 +85,7 @@ void FBXRun(std::vector<VertexInfo> &returnData, std::vector<BoneInfo> &returnBo
 	std::string fileOne("..\\AnimatedAssests\\AnimatedBox\\Box_Idle.fbx");
 	std::string binSaveOneLocation("fbx.bin");
 
-//	std::vector<VertexInfo> VertStuff;
+	//	std::vector<VertexInfo> VertStuff;
 
 	LoadStuffOne.saveFiletoBin(fileOne.c_str(), binSaveOneLocation.c_str());
 
@@ -97,7 +97,7 @@ void FBXRun(std::vector<VertexInfo> &returnData, std::vector<BoneInfo> &returnBo
 
 ////////render objects stuff
 RenderObjects Panel;
-
+RenderObjects Box;
 ///////
 
 
@@ -145,7 +145,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	ShowWindow(hWnd, nCmdShow);
 
-	
+
 	//loading in model
 
 
@@ -165,7 +165,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	for (unsigned i = 0; i < VertStuff.size(); i++)
 	{
 		VERTEX temp;
-		temp.X = VertStuff[i].vert.x * 0.1f +0.5f;
+		temp.X = VertStuff[i].vert.x * 0.1f + 0.5f;
 		temp.Y = VertStuff[i].vert.y* 0.1f;
 		temp.Z = VertStuff[i].vert.z* 0.1f;
 
@@ -185,7 +185,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//InitD3D(hWnd);
 
 #if	LOGANOSCAMERA
-	InitCamera();	
+	InitCamera();
 #elif TORONTOCAMERA
 	InitializeScene();
 #endif
@@ -209,6 +209,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 	}
 	Panel.Clean();
+	Box.Clean();
 	CleanD3D();
 	return (int)msg.wParam;
 }
@@ -333,17 +334,40 @@ void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = BACKBUFFER_WIDTH;
-	viewport.Height = BACKBUFFER_HEIGHT;
+	viewport.Width = 1100;
+	viewport.Height = 800;
 
 	devcon->RSSetViewports(1, &viewport);
 
 
 
 	Panel.InitEverything(dev, devcon, vertesess);
+	for (unsigned i = 0; i < vertesess.size(); i++)
+	{
 
+		vertesess[i].X *= 0.1f;
+		vertesess[i].Y *= 0.1f;
+		vertesess[i].Z *= 0.1f;
+		vertesess[i].Color[0] = 0.1f;
+		vertesess[i].Color[1] = 0.1f;
+		vertesess[i].Color[2] = 0.76f;
+		vertesess[i].Color[3] = 1.0f;
+	}
+	Box.InitEverything(dev, devcon, vertesess);
 }
-void RenderRenderObjects() {
+
+
+void DrawBox(DirectX::XMFLOAT4X4 position)
+{
+	ModelViewProjectionConstantBuffer lcb;
+	//DirectX::XMStoreFloat4x4(&lcb.model, position);
+	lcb.model = position;
+	lcb.projection = proj;
+	lcb.view = view;
+	Box.Render(lcb, devcon);
+}
+
+void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 
 	float Color[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
 	// clear the back buffer to a deep blue
@@ -356,7 +380,31 @@ void RenderRenderObjects() {
 	KeyboardFunctions();
 	MouseFunctions();
 #endif
-	
+
+
+	for (unsigned h = 0; h < BoneStuff_.size(); h++)
+	{
+		DirectX::XMFLOAT4X4 Temp;
+		for (unsigned i = 0; i < 4; i++)
+		{
+			for (unsigned k = 0; k < 4; k++)
+			{
+
+				if (i == 3 && k == 1)
+				{
+					Temp.m[i][k] = -1.0f * BoneStuff_[h].transform.m[i][k];
+				}
+				else
+				{
+					Temp.m[i][k] = BoneStuff_[h].transform.m[i][k];
+				}
+
+			}
+		}
+		DrawBox(Temp);
+	}
+
+
 
 	ModelViewProjectionConstantBuffer lcb;
 	DirectX::XMStoreFloat4x4(&lcb.model, DirectX::XMMatrixIdentity());
@@ -659,7 +707,7 @@ void CameraUPdadte()
 	}
 
 
-	if (GetAsyncKeyState(VK_RETURN)&1)// enter key - toggle wire frame
+	if (GetAsyncKeyState(VK_RETURN) & 1)// enter key - toggle wire frame
 	{
 		Panel.ToggleWireFrame();
 	}
