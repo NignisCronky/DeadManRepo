@@ -64,7 +64,7 @@ void InitPipeline(void);    // loads and prepares the shaders
 
 
 void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess);
-void RenderRenderObjects();
+void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_);
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -165,9 +165,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	for (unsigned i = 0; i < VertStuff.size(); i++)
 	{
 		VERTEX temp;
-		temp.X = VertStuff[i].vert.x * 0.1f + 0.5f;
-		temp.Y = VertStuff[i].vert.y* 0.1f;
-		temp.Z = VertStuff[i].vert.z* 0.1f;
+		temp.X = VertStuff[i].vert.x ;
+		temp.Y = VertStuff[i].vert.y;
+		temp.Z = VertStuff[i].vert.z;
 
 		float col[4] = { 1.0f,0.2f , 0.0f, 1.0f };
 		temp.Color[0] = col[0];
@@ -205,7 +205,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		else
 		{
 			//RenderFrame();
-			RenderRenderObjects();
+			RenderRenderObjects(BoneStuff);
 		}
 	}
 	Panel.Clean();
@@ -334,8 +334,8 @@ void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = 1100;
-	viewport.Height = 800;
+	viewport.Width = BACKBUFFER_WIDTH;
+	viewport.Height = BACKBUFFER_HEIGHT;
 
 	devcon->RSSetViewports(1, &viewport);
 
@@ -724,6 +724,10 @@ void InitializeScene()
 	worldTranslate = DirectX::XMMatrixIdentity();
 
 	toSceneShader.viewMatrix = DirectX::XMMatrixIdentity();
+	
+	toSceneShader.viewMatrix.r[3].m128_f32[1] += 2.5;
+	toSceneShader.viewMatrix.r[3].m128_f32[2] -= 5.5;
+
 
 	toSceneShader.viewMatrix = XMMatrixInverse(0, toSceneShader.viewMatrix);
 
