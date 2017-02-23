@@ -1,4 +1,4 @@
-#include "../FBX_Exporter/DLLTransit.h"
+
 #include "RenderObjects.h"
 
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
@@ -342,117 +342,6 @@ void CleanD3D()
 	ConstantBuffer->Release();*/
 }
 
-
-#pragma region Legacy
-
-
-void RenderFrame(void)
-{
-
-
-	float Color[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	// clear the back buffer to a deep blue
-	devcon->ClearRenderTargetView(backbuffer, Color);
-
-	CameraUPdadte();
-
-	ModelViewProjectionConstantBuffer cb;
-	DirectX::XMStoreFloat4x4(&cb.model, DirectX::XMMatrixIdentity());
-	cb.projection = proj;
-	cb.view = view;
-
-
-	D3D11_MAPPED_SUBRESOURCE _PVWResourse;
-	devcon->Map(ConstantBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &_PVWResourse);
-	memcpy(_PVWResourse.pData, &cb, sizeof(ModelViewProjectionConstantBuffer));
-	devcon->Unmap(ConstantBuffer, NULL);
-	devcon->VSSetConstantBuffers(0, 1, &ConstantBuffer);
-
-	UINT stride = sizeof(VERTEX);
-	UINT offset = 0;
-	devcon->IASetVertexBuffers(0, 1, &VertexBuffer, &stride, &offset);
-
-
-	devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-
-	devcon->Draw(6, 0);
-
-
-	swapchain->Present(0, 0);
-}
-
-void InitPipeline()
-{
-
-	// encapsulate both shaders into shader objects
-	dev->CreateVertexShader(TVS, sizeof(TVS), NULL, &pVS);
-	dev->CreatePixelShader(TPS, sizeof(TPS), NULL, &pPS);
-
-
-	// set the shader objects
-	devcon->VSSetShader(pVS, 0, 0);
-	devcon->PSSetShader(pPS, 0, 0);
-
-	// create the input layout object
-	D3D11_INPUT_ELEMENT_DESC ied[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-
-	dev->CreateInputLayout(ied, 2, TVS, sizeof(TVS), &pLayout);
-	devcon->IASetInputLayout(pLayout);
-
-
-}
-
-void InitGraphics()
-{
-	// create a triangle using the VERTEX struct
-	VERTEX OurVertices[] =
-	{
-		{ 0.0f, -0.5f, 0.0f,{ 1.0f, 0.0f, 0.0f, 1.0f } },
-		{ 1.0f, -0.5f, 1.0f,{ 0.0f, 0.0f, 1.0f, 1.0f } },
-		{ 1.0f, -0.5f, 0.0f,{ 0.0f, 1.0f, 0.0f, 1.0f } },
-		{ 0.0f, -0.5f, 0.0f,{ 1.0f, 0.0f, 0.0f, 1.0f } },
-		{ 0.0f, -0.5f, 1.0f,{ 1.0f, 0.0f, 0.0f, 1.0f } },
-		{ 1.0f, -0.5f, 1.0f,{ 0.0f, 0.0f, 1.0f, 1.0f } }
-
-
-	};
-
-
-	// create the vertex buffer
-	D3D11_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));
-
-	bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
-	bd.ByteWidth = sizeof(VERTEX) * 6;             // size is the VERTEX struct * 3
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
-	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
-
-	dev->CreateBuffer(&bd, NULL, &VertexBuffer);       // create the buffer
-
-
-													   // copy the vertices into the buffer
-	D3D11_MAPPED_SUBRESOURCE ms;
-	devcon->Map(VertexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
-	memcpy(ms.pData, OurVertices, sizeof(OurVertices));                 // copy the data
-	devcon->Unmap(VertexBuffer, NULL);                                      // unmap the buffer
-	ZeroMemory(&bd, sizeof(bd));
-
-	bd.Usage = D3D11_USAGE_DYNAMIC;											// write access access by CPU and GPU
-	bd.ByteWidth = sizeof(ModelViewProjectionConstantBuffer);             // size is the VERTEX struct * 3
-	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;								 // use as a vertex buffer
-	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;							// allow CPU to write in buffer
-
-	dev->CreateBuffer(&bd, NULL, &ConstantBuffer);						// create the buffer
-}
-#pragma endregion
-
-
-
 void UpdatePOS()
 {
 	if (GetAsyncKeyState(VK_LEFT))
@@ -625,3 +514,110 @@ void CameraUPdadte()
 	}
 
 }
+#pragma region Legacy
+
+
+void RenderFrame(void)
+{
+
+
+	float Color[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	// clear the back buffer to a deep blue
+	devcon->ClearRenderTargetView(backbuffer, Color);
+
+	CameraUPdadte();
+
+	ModelViewProjectionConstantBuffer cb;
+	DirectX::XMStoreFloat4x4(&cb.model, DirectX::XMMatrixIdentity());
+	cb.projection = proj;
+	cb.view = view;
+
+
+	D3D11_MAPPED_SUBRESOURCE _PVWResourse;
+	devcon->Map(ConstantBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &_PVWResourse);
+	memcpy(_PVWResourse.pData, &cb, sizeof(ModelViewProjectionConstantBuffer));
+	devcon->Unmap(ConstantBuffer, NULL);
+	devcon->VSSetConstantBuffers(0, 1, &ConstantBuffer);
+
+	UINT stride = sizeof(VERTEX);
+	UINT offset = 0;
+	devcon->IASetVertexBuffers(0, 1, &VertexBuffer, &stride, &offset);
+
+
+	devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+	devcon->Draw(6, 0);
+
+
+	swapchain->Present(0, 0);
+}
+
+void InitPipeline()
+{
+
+	// encapsulate both shaders into shader objects
+	dev->CreateVertexShader(TVS, sizeof(TVS), NULL, &pVS);
+	dev->CreatePixelShader(TPS, sizeof(TPS), NULL, &pPS);
+
+
+	// set the shader objects
+	devcon->VSSetShader(pVS, 0, 0);
+	devcon->PSSetShader(pPS, 0, 0);
+
+	// create the input layout object
+	D3D11_INPUT_ELEMENT_DESC ied[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	dev->CreateInputLayout(ied, 2, TVS, sizeof(TVS), &pLayout);
+	devcon->IASetInputLayout(pLayout);
+
+
+}
+
+void InitGraphics()
+{
+	// create a triangle using the VERTEX struct
+	VERTEX OurVertices[] =
+	{
+		{ 0.0f, -0.5f, 0.0f,{ 1.0f, 0.0f, 0.0f, 1.0f } },
+		{ 1.0f, -0.5f, 1.0f,{ 0.0f, 0.0f, 1.0f, 1.0f } },
+		{ 1.0f, -0.5f, 0.0f,{ 0.0f, 1.0f, 0.0f, 1.0f } },
+		{ 0.0f, -0.5f, 0.0f,{ 1.0f, 0.0f, 0.0f, 1.0f } },
+		{ 0.0f, -0.5f, 1.0f,{ 1.0f, 0.0f, 0.0f, 1.0f } },
+		{ 1.0f, -0.5f, 1.0f,{ 0.0f, 0.0f, 1.0f, 1.0f } }
+
+
+	};
+
+
+	// create the vertex buffer
+	D3D11_BUFFER_DESC bd;
+	ZeroMemory(&bd, sizeof(bd));
+
+	bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
+	bd.ByteWidth = sizeof(VERTEX) * 6;             // size is the VERTEX struct * 3
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
+	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
+
+	dev->CreateBuffer(&bd, NULL, &VertexBuffer);       // create the buffer
+
+
+													   // copy the vertices into the buffer
+	D3D11_MAPPED_SUBRESOURCE ms;
+	devcon->Map(VertexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
+	memcpy(ms.pData, OurVertices, sizeof(OurVertices));                 // copy the data
+	devcon->Unmap(VertexBuffer, NULL);                                      // unmap the buffer
+	ZeroMemory(&bd, sizeof(bd));
+
+	bd.Usage = D3D11_USAGE_DYNAMIC;											// write access access by CPU and GPU
+	bd.ByteWidth = sizeof(ModelViewProjectionConstantBuffer);             // size is the VERTEX struct * 3
+	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;								 // use as a vertex buffer
+	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;							// allow CPU to write in buffer
+
+	dev->CreateBuffer(&bd, NULL, &ConstantBuffer);						// create the buffer
+}
+#pragma endregion

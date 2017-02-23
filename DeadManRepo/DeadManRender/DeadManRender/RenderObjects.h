@@ -12,8 +12,9 @@
 #include <vector>
 #include "TVS.csh"
 #include "TPS.csh"
+#include "RVS.csh"
 
-
+#include "../FBX_Exporter/DLLTransit.h"
 ////////structs
 struct VERTEX { FLOAT X, Y, Z; float Color[4]; };  // a struct to define a single vertex
 
@@ -38,15 +39,14 @@ public:
 	ID3D11PixelShader *PS;                // the pointer to the pixel shader
 	ID3D11Buffer *_VertexBuffer;                // the pointer to the vertex buffer
 	ID3D11Buffer *_ConstantBuffer;		// the pointer to the constant buffer
+	ID3D11Buffer *_ConstantBoneBuffer;		// the pointer to the constant buffer
+
 
 	ID3D11RasterizerState *_RSwire; //the pointer to the raster state
 	ID3D11RasterizerState *_RSsolid; //the pointer to the raster state
 
 
 	bool wire = false;
-
-
-
 
 	void Clean() {
 		Layout->Release();
@@ -91,24 +91,57 @@ public:
 		SetStuff(_devcon);
 		_devcon->Draw(size, 0);
 	}
-
 	void InitShadders(ID3D11Device *dev)
 	{
 		dev->CreateVertexShader(TVS, sizeof(TVS), NULL, &VS);
 		dev->CreatePixelShader(TPS, sizeof(TPS), NULL, &PS);
 	}
-
+	void InitSmartShadders(ID3D11Device *dev)
+	{
+		dev->CreateVertexShader(RVS, sizeof(RVS), NULL, &VS);
+		dev->CreatePixelShader(TPS, sizeof(TPS), NULL, &PS);
+	}
 	void InitInputLayout(ID3D11Device *dev)
 	{
 		D3D11_INPUT_ELEMENT_DESC ied[] =
 		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		};
 
 		dev->CreateInputLayout(ied, 2, TVS, sizeof(TVS), &Layout);
 	}
+	void InitInputLayoutUVs(ID3D11Device *dev)
+	{
+		D3D11_INPUT_ELEMENT_DESC ied[] =
+		{
+			{ "POSITION",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "INDICIES",		0, DXGI_FORMAT_R32_UINT,			0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "BLENDWEIGHTS",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "BONEINDICES",	0, DXGI_FORMAT_R32G32B32A32_UINT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "NORMALS",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "UVS",			0, DXGI_FORMAT_R32G32_FLOAT,		0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		};
+		dev->CreateInputLayout(ied, 6, RVS, sizeof(RVS), &Layout);
+	}
+	void InitSmartVerts(ID3D11Device *dev, ID3D11DeviceContext* devcon, VertexInfo* object, unsigned size_)
+	{
+		D3D11_BUFFER_DESC bd;
+		ZeroMemory(&bd, sizeof(bd));
 
+		bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
+		bd.ByteWidth = sizeof(VertexInfo) * size;             // size is the VERTEX struct * 3
+		bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
+		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
+
+		dev->CreateBuffer(&bd, NULL, &_VertexBuffer);       // create the buffer
+
+		D3D11_MAPPED_SUBRESOURCE ms;
+		devcon->Map(_VertexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
+		memcpy(ms.pData, object, size * sizeof(VertexInfo));                 // copy the data
+		devcon->Unmap(_VertexBuffer, NULL);                                      // unmap the buffer
+		ZeroMemory(&bd, sizeof(bd));
+	}
 	void InitVerts(ID3D11Device *dev, ID3D11DeviceContext* devcon, VERTEX* object, unsigned size_)
 	{
 		/*size = 6;
@@ -142,46 +175,10 @@ public:
 		devcon->Unmap(_VertexBuffer, NULL);                                      // unmap the buffer
 		ZeroMemory(&bd, sizeof(bd));
 	}
-	//VertStuff
-
-	void InitVertsText(ID3D11Device *dev, ID3D11DeviceContext* devcon)
-	{
-		size = 3;
-		VERTEX OurVertices[] =
-		{
-			{ -1.0f, -0.5f, -1.0f,{ 1.0f, 0.0f, 0.0f, 1.0f } },
-			{ -2.0f, -0.5f, -2.0f,{ 0.0f, 0.0f, 1.0f, 1.0f } },
-			{ -2.0f, -0.5f, -1.0f,{ 0.0f, 1.0f, 0.0f, 1.0f } }
-			
-		};
-
-
-		// create the vertex buffer
-		D3D11_BUFFER_DESC bd;
-		ZeroMemory(&bd, sizeof(bd));
-
-		bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
-		bd.ByteWidth = sizeof(VERTEX) * size;             // size is the VERTEX struct * 3
-		bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
-		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
-
-		dev->CreateBuffer(&bd, NULL, &_VertexBuffer);       // create the buffer
-
-		D3D11_MAPPED_SUBRESOURCE ms;
-		devcon->Map(_VertexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
-		memcpy(ms.pData, OurVertices, sizeof(OurVertices));                 // copy the data
-		devcon->Unmap(_VertexBuffer, NULL);                                      // unmap the buffer
-		ZeroMemory(&bd, sizeof(bd));
-	}
-
-
 	void ToggleWireFrame()
 	{
 		wire = !wire;
 	}
-
-
-
 	void IntiConstantBuffer(ID3D11Device *dev)
 	{
 		D3D11_BUFFER_DESC bd;
@@ -194,7 +191,24 @@ public:
 
 		dev->CreateBuffer(&bd, NULL, &_ConstantBuffer);						// create the buffer
 	}
+	void InitEverythingSmart(ID3D11Device *kdev, ID3D11DeviceContext* kdevcon, std::vector<VertexInfo> t)
+	{
+		InitSmartShadders(kdev);
+		InitInputLayoutUVs(kdev);
+		InitSmartVerts(kdev, kdevcon, t.data(), t.size());
+		IntiConstantBuffer(kdev);
 
+		D3D11_RASTERIZER_DESC Temp;
+		ZeroMemory(&Temp, sizeof(Temp));
+		Temp.CullMode = D3D11_CULL_BACK;
+		Temp.FillMode = D3D11_FILL_SOLID;
+		kdev->CreateRasterizerState(&Temp, &_RSsolid);
+		ZeroMemory(&Temp, sizeof(Temp));
+		Temp.CullMode = D3D11_CULL_BACK;
+		Temp.FillMode = D3D11_FILL_WIREFRAME;
+		kdev->CreateRasterizerState(&Temp, &_RSwire);
+		wire = false;
+	}
 	void InitEverything(ID3D11Device *kdev, ID3D11DeviceContext* kdevcon, std::vector<VERTEX> t)
 	{
 		InitShadders(kdev);

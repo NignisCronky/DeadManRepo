@@ -33,6 +33,12 @@
     <ClCompile Include="RenderObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ReadFiles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sphere.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimatedMesh.h">
@@ -48,6 +54,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RenderObjects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReadFiles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -74,6 +86,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="TVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="RVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
