@@ -25,7 +25,7 @@ public:
 	bool LoadScene(const char* inFileName);
 	void ExportFBX();
 	FbxScene* getScene() { return mFBXScene; }
-//	Skeleton getSkeleton() { return mSkeleton; }
+	Skeleton getSkeleton() { return mSkeleton; }
 	void InitFBX();
 
 
@@ -51,7 +51,7 @@ public:
 	void ProcessMesh(FbxNode* inNode);
 	std::vector<PNTIWVertex> getverts() { return mVertices; }
 	void ProcessSkeletonHierarchy(FbxNode* inRootNode);
-
+	FbxLongLong getAnimationLength() { return mAnimationLength; };
 //	void ProcessSkeletonHierarchy(FbxNode* inRootNode);
 private:
 	void ProcessGeometry(FbxNode* inNode);

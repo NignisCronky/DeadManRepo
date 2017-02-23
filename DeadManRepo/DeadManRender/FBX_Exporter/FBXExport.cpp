@@ -29,12 +29,12 @@ bool FBXExport::Initialize()
 
 bool FBXExport::LoadScene(const char* inFileName, const char* inOutputPath)
 {
-	LARGE_INTEGER start;
-	LARGE_INTEGER end;
+//	LARGE_INTEGER start;
+//	LARGE_INTEGER end;
 	mInputFilePath = inFileName;
 	mOutputFilePath = inOutputPath;
 
-	QueryPerformanceCounter(&start);
+//	QueryPerformanceCounter(&start);
 	FbxImporter* fbxImporter = FbxImporter::Create(mFBXManager, "myImporter");
 
 	if (!fbxImporter)
@@ -52,19 +52,19 @@ bool FBXExport::LoadScene(const char* inFileName, const char* inOutputPath)
 		return false;
 	}
 	fbxImporter->Destroy();
-	QueryPerformanceCounter(&end);
-	std::cout << "Loading FBX File: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
+//	QueryPerformanceCounter(&end);
+//	std::cout << "Loading FBX File: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
 
 	return true;
 }
 bool FBXExport::LoadScene(const char* inFileName)
 {
-	LARGE_INTEGER start;
-	LARGE_INTEGER end;
+//	LARGE_INTEGER start;
+//	LARGE_INTEGER end;
 	mInputFilePath = inFileName;
 //	mOutputFilePath = inOutputPath;
 
-	QueryPerformanceCounter(&start);
+//	QueryPerformanceCounter(&start);
 	FbxImporter* fbxImporter = FbxImporter::Create(mFBXManager, "myImporter");
 
 	if (!fbxImporter)
@@ -82,8 +82,8 @@ bool FBXExport::LoadScene(const char* inFileName)
 		return false;
 	}
 	fbxImporter->Destroy();
-	QueryPerformanceCounter(&end);
-	std::cout << "Loading FBX File: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
+//	QueryPerformanceCounter(&end);
+//	std::cout << "Loading FBX File: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
 
 	return true;
 }
@@ -102,35 +102,35 @@ void FBXExport::InitFBX()
 
 void FBXExport::ExportFBX()
 {
-	LARGE_INTEGER start;
-	LARGE_INTEGER end;
+//	LARGE_INTEGER start;
+//	LARGE_INTEGER end;
 
 	// Get the clean name of the model
 	std::string genericFileName = Utilities::GetFileName(mInputFilePath);
 	genericFileName = Utilities::RemoveSuffix(genericFileName);
 
-	QueryPerformanceCounter(&start);
+//	QueryPerformanceCounter(&start);
 	ProcessSkeletonHierarchy(mFBXScene->GetRootNode());
 	if (mSkeleton.mJoints.empty())
 	{
 		mHasAnimation = false;
 	}
 
-	std::cout << "\n\n\n\nExporting Model:" << genericFileName << "\n";
-	QueryPerformanceCounter(&end);
-	std::cout << "Processing Skeleton Hierarchy: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
+//	std::cout << "\n\n\n\nExporting Model:" << genericFileName << "\n";
+//	QueryPerformanceCounter(&end);
+//	std::cout << "Processing Skeleton Hierarchy: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
 
-	QueryPerformanceCounter(&start);
+//	QueryPerformanceCounter(&start);
 	ProcessGeometry(mFBXScene->GetRootNode());
-	QueryPerformanceCounter(&end);
-	std::cout << "Processing Geometry: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
+//	QueryPerformanceCounter(&end);
+//	std::cout << "Processing Geometry: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
 
-	QueryPerformanceCounter(&start);
+//	QueryPerformanceCounter(&start);
 	Optimize();
-	QueryPerformanceCounter(&end);
-	std::cout << "Optimization: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
+//	QueryPerformanceCounter(&end);
+//	std::cout << "Optimization: " << ((end.QuadPart - start.QuadPart) / static_cast<float>(mCPUFreq.QuadPart)) << "s\n";
 	//PrintMaterial();
-	std::cout << "\n\n";
+//	std::cout << "\n\n";
 
 
 
@@ -192,6 +192,7 @@ void FBXExport::ProcessSkeletonHierarchyRecursively(FbxNode* inNode, int inDepth
 	{
 		Joint currJoint;
 		currJoint.mParentIndex = inParentIndex;
+		currJoint.mMyIndex = myIndex;
 		currJoint.mName = inNode->GetName();
 		mSkeleton.mJoints.push_back(currJoint);
 	}
@@ -291,12 +292,14 @@ void FBXExport::ProcessJointsAndAnimations(FbxNode* inNode)
 
 			for (FbxLongLong i = start.GetFrameCount(FbxTime::eFrames24); i <= end.GetFrameCount(FbxTime::eFrames24); ++i)
 			{
-				FbxTime currTime;
-				currTime.SetFrame(i, FbxTime::eFrames24);
-				*currAnim = new Keyframe();
+				float keyFrameTime = 0;
+				FbxTime currTime;//
+				currTime.SetFrame(i, FbxTime::eFrames24);//
+				*currAnim = new Keyframe();//
 				(*currAnim)->mFrameNum = i;
-				FbxAMatrix currentTransformOffset = inNode->EvaluateGlobalTransform(currTime) * geometryTransform;
+				FbxAMatrix currentTransformOffset = inNode->EvaluateGlobalTransform(currTime) * geometryTransform;//
 				(*currAnim)->mGlobalTransform = currentTransformOffset.Inverse() * currCluster->GetLink()->EvaluateGlobalTransform(currTime);
+				(*currAnim)->keyFrameTime = (float)currTime.GetSecondDouble();
 				currAnim = &((*currAnim)->mNext);
 			}
 		}

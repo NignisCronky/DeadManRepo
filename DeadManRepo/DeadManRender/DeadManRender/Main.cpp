@@ -51,7 +51,7 @@ void UpdateCamera();
 void CameraUPdadte();
 void InitCamera();
 
-void FBXRun(std::vector<VertexInfo> &returnData)
+void FBXRun(std::vector<VertexInfo> &returnData, std::vector<BoneInfo> &returnBone, Animation* animation)
 {
 	EXP::DLLTransit LoadStuffOne;
 	std::string fileOne("..\\AnimatedAssests\\AnimatedBox\\Box_Idle.fbx");
@@ -61,7 +61,7 @@ void FBXRun(std::vector<VertexInfo> &returnData)
 
 	LoadStuffOne.saveFiletoBin(fileOne.c_str(), binSaveOneLocation.c_str());
 
-	LoadStuffOne.loadFilefromBin(binSaveOneLocation.c_str(), returnData);
+	LoadStuffOne.loadFilefromBin(binSaveOneLocation.c_str(), returnData, returnBone, animation);
 }
 
 
@@ -126,7 +126,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 
 	std::vector<VertexInfo> VertStuff;
-	FBXRun(VertStuff);
+	std::vector<BoneInfo> BoneStuff;
+	Animation* animation = nullptr;
+	FBXRun(VertStuff, BoneStuff, animation);
 
 
 	std::vector<VERTEX> Verts;
