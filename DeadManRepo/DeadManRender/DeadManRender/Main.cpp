@@ -65,7 +65,7 @@ float viewAngle = DirectX::XM_PI / 4.0f;
 float nearClip = 1.0f;
 float farClip = 2000.0f;
 
-void InitD3D(HWND hWnd);
+
 void CleanD3D(void);
 void RenderFrame(void);
 void InitGraphics(void);    // creates the shape to render
