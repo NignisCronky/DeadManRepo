@@ -365,6 +365,13 @@ void DrawBox(DirectX::XMFLOAT4X4 position)
 	Box.Render(lcb, devcon);
 }
 
+
+unsigned frame = 0;
+//struct KeyFrame
+//{
+//	float keyTime;
+//	Float4x4 transform;
+//};
 void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 
 	float Color[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
@@ -379,9 +386,11 @@ void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 	MouseFunctions();
 #endif
 
-
+	
+	
 	for (unsigned h = 0; h < BoneStuff_.size(); h++)
 	{
+		KeyFrame* Tempkey = BoneStuff_[h].keyframes[frame][0];
 		DirectX::XMFLOAT4X4 Temp;
 		for (unsigned i = 0; i < 4; i++)
 		{
@@ -390,11 +399,13 @@ void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 
 				if (i == 3 && k == 1)
 				{
-					Temp.m[i][k] = -1.0f * BoneStuff_[h].transform.m[i][k];
+					Temp.m[i][k] =   (*Tempkey).transform.m[i][k];
+					//Temp.m[i][k] = -1.0f * BoneStuff_[h].transform.m[i][k];
 				}
 				else
 				{
-					Temp.m[i][k] = BoneStuff_[h].transform.m[i][k];
+					Temp.m[i][k] = (*Tempkey).transform.m[i][k];
+					//Temp.m[i][k] = BoneStuff_[h].transform.m[i][k];
 				}
 
 			}
