@@ -16,7 +16,7 @@ ID3D11PixelShader *pPS;                // the pointer to the pixel shader
 ID3D11Buffer *VertexBuffer;                // the pointer to the vertex buffer
 ID3D11Buffer *ConstantBuffer;		// the pointer to the constant buffer
 
-									/////////////////////////////////////////////
+/////////////////////////////////////////////
 SEND_TO_SCENE toSceneShader;
 //ID3D11Buffer *constantSceneBuffer = nullptr;
 DirectX::XMMATRIX worldTranslate;
@@ -35,6 +35,15 @@ POINT						currPoint;
 
 #define LOGANOSCAMERA 0
 #define TORONTOCAMERA 1
+
+Platform platform;
+
+// Depth Stencil Stuff
+ID3D11DepthStencilView			*depthStencilView = nullptr;
+ID3D11DepthStencilState			*depthStencilState = nullptr;
+ID3D11Texture2D					*depthStenciltexture = nullptr;
+ID3D11Buffer					*constantSceneBuffer = nullptr;
+
 /////////////////////////////////////////////
 
 
@@ -74,6 +83,11 @@ void CameraUPdadte();
 void InitCamera();
 /////////////////////////////////// Toronto Functions
 void InitializeScene();
+void DrawObjects();
+void CreateDepthStencil();
+void SetRenderTargets();
+
+
 void KeyboardFunctions();
 void MouseFunctions();
 void UpdateviewMatrix();
@@ -227,64 +241,64 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void InitD3D(HWND hWnd)
-{
-	// create a struct to hold information about the swap chain
-	DXGI_SWAP_CHAIN_DESC scd;
-
-	// clear out the struct for use
-	ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC));
-
-	// fill the swap chain description struct
-	scd.BufferCount = 1;                                    // one back buffer
-	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;     // use 32-bit color
-	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;      // how swap chain is to be used
-	scd.OutputWindow = hWnd;                                // the window to be used
-	scd.SampleDesc.Count = 4;                               // how many multisamples
-	scd.Windowed = TRUE;                                    // windowed/full-screen mode
-
-															// create a device, device context and swap chain using the information in the scd struct
-	D3D11CreateDeviceAndSwapChain(NULL,
-		D3D_DRIVER_TYPE_HARDWARE,
-		NULL,
-		NULL,
-		NULL,
-		NULL,
-		D3D11_SDK_VERSION,
-		&scd,
-		&swapchain,
-		&dev,
-		NULL,
-		&devcon);
-
-
-	// get the address of the back buffer
-	ID3D11Texture2D *pBackBuffer;
-	swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
-
-	// use the back buffer address to create the render target
-	dev->CreateRenderTargetView(pBackBuffer, NULL, &backbuffer);
-	pBackBuffer->Release();
-
-	// set the render target as the back buffer
-	devcon->OMSetRenderTargets(1, &backbuffer, NULL);
-
-
-	// Set the viewport
-	D3D11_VIEWPORT viewport;
-	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
-
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width = BACKBUFFER_WIDTH;
-	viewport.Height = BACKBUFFER_HEIGHT;
-
-	devcon->RSSetViewports(1, &viewport);
-
-
-	InitPipeline();
-	InitGraphics();
-}
+//void InitD3D(HWND hWnd)
+//{
+//	// create a struct to hold information about the swap chain
+//	DXGI_SWAP_CHAIN_DESC scd;
+//
+//	// clear out the struct for use
+//	ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC));
+//
+//	// fill the swap chain description struct
+//	scd.BufferCount = 1;                                    // one back buffer
+//	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;     // use 32-bit color
+//	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;      // how swap chain is to be used
+//	scd.OutputWindow = hWnd;                                // the window to be used
+//	scd.SampleDesc.Count = 4;                               // how many multisamples
+//	scd.Windowed = TRUE;                                    // windowed/full-screen mode
+//
+//															// create a device, device context and swap chain using the information in the scd struct
+//	D3D11CreateDeviceAndSwapChain(NULL,
+//		D3D_DRIVER_TYPE_HARDWARE,
+//		NULL,
+//		NULL,
+//		NULL,
+//		NULL,
+//		D3D11_SDK_VERSION,
+//		&scd,
+//		&swapchain,
+//		&dev,
+//		NULL,
+//		&devcon);
+//
+//
+//	// get the address of the back buffer
+//	ID3D11Texture2D *pBackBuffer;
+//	swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
+//
+//	// use the back buffer address to create the render target
+//	dev->CreateRenderTargetView(pBackBuffer, NULL, &backbuffer);
+//	pBackBuffer->Release();
+//
+//	// set the render target as the back buffer
+//	devcon->OMSetRenderTargets(1, &backbuffer, NULL);
+//	devcon->OMSetDepthStencilState(depthStencilState, 0);
+//
+//	// Set the viewport
+//	D3D11_VIEWPORT viewport;
+//	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+//
+//	viewport.TopLeftX = 0;
+//	viewport.TopLeftY = 0;
+//	viewport.Width = BACKBUFFER_WIDTH;
+//	viewport.Height = BACKBUFFER_HEIGHT;
+//
+//	devcon->RSSetViewports(1, &viewport);
+//
+//
+//	InitPipeline();
+//	InitGraphics();
+//}
 
 void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 	// create a struct to hold information about the swap chain
@@ -300,6 +314,7 @@ void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 	scd.OutputWindow = hWnd;                                // the window to be used
 	scd.SampleDesc.Count = 4;                               // how many multisamples
 	scd.Windowed = TRUE;                                    // windowed/full-screen mode
+	scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
 															// create a device, device context and swap chain using the information in the scd struct
 	D3D11CreateDeviceAndSwapChain(NULL,
@@ -324,8 +339,8 @@ void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 	dev->CreateRenderTargetView(pBackBuffer, NULL, &backbuffer);
 	pBackBuffer->Release();
 
+//	CreateDepthStencil();
 	// set the render target as the back buffer
-	devcon->OMSetRenderTargets(1, &backbuffer, NULL);
 
 
 	// Set the viewport
@@ -334,12 +349,18 @@ void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
+	viewport.MaxDepth = 1;
+	viewport.MinDepth = 0;
 	viewport.Width = BACKBUFFER_WIDTH;
 	viewport.Height = BACKBUFFER_HEIGHT;
 
 	devcon->RSSetViewports(1, &viewport);
 
+	CreateDepthStencil();
 
+	devcon->OMSetRenderTargets(1, &backbuffer, depthStencilView);
+
+	devcon->OMSetDepthStencilState(depthStencilState, 0);//
 
 	Panel.InitEverything(dev, devcon, vertesess);
 	for (unsigned i = 0; i < vertesess.size(); i++)
@@ -359,6 +380,8 @@ void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 
 void DrawBox(DirectX::XMFLOAT4X4 position)
 {
+	devcon->OMSetRenderTargets(1, &backbuffer, NULL);
+
 	ModelViewProjectionConstantBuffer lcb;
 	//DirectX::XMStoreFloat4x4(&lcb.model, position);
 	lcb.model = position;
@@ -372,6 +395,7 @@ void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 	float Color[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
 	// clear the back buffer to a deep blue
 	devcon->ClearRenderTargetView(backbuffer, Color);
+	devcon->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 
 #if	LOGANOSCAMERA
 	CameraUPdadte();
@@ -381,6 +405,7 @@ void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 	MouseFunctions();
 #endif
 
+	DrawObjects();
 
 	for (unsigned h = 0; h < BoneStuff_.size(); h++)
 	{
@@ -413,6 +438,7 @@ void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 	Panel.Render(lcb, devcon);
 
 	swapchain->Present(0, 0);
+
 };
 
 void CleanD3D()
@@ -717,7 +743,22 @@ void CameraUPdadte()
 #if TORONTOCAMERA
 void InitializeScene()
 {
-#pragma region Matrix and Projection Matrix
+	HRESULT hr;
+	D3D11_BUFFER_DESC constscenedesc;
+	ZeroMemory(&constscenedesc, sizeof(D3D11_BUFFER_DESC));
+
+	constscenedesc.ByteWidth = sizeof(SEND_TO_SCENE);
+	constscenedesc.Usage = D3D11_USAGE_DYNAMIC;
+	constscenedesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constscenedesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	constscenedesc.MiscFlags = NULL;
+	constscenedesc.StructureByteStride = NULL;
+	hr = dev->CreateBuffer(&constscenedesc, NULL, &constantSceneBuffer);
+	assert(hr == S_OK);
+
+
+
 	ZeroMemory(&toSceneShader, sizeof(SEND_TO_SCENE));
 	ZeroMemory(&worldTranslate, sizeof(DirectX::XMMATRIX));
 
@@ -741,7 +782,7 @@ void InitializeScene()
 			view.m[i][j] = toSceneShader.viewMatrix.r[i].m128_f32[j];
 		}
 	}
-#pragma endregion
+	platform.Initialize(dev);
 }
 void KeyboardFunctions()
 {
@@ -826,5 +867,53 @@ void MouseFunctions()
 void UpdateviewMatrix()
 {
 	XMStoreFloat4x4(&view, toSceneShader.viewMatrix);
+}
+void CreateDepthStencil()
+{
+	D3D11_TEXTURE2D_DESC texturedesc;
+	ZeroMemory(&texturedesc, sizeof(D3D11_TEXTURE2D_DESC));
+
+	texturedesc.Width = BACKBUFFER_WIDTH;
+	texturedesc.Height = BACKBUFFER_HEIGHT;
+	texturedesc.MipLevels = 1;
+	texturedesc.ArraySize = 1;
+	texturedesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	texturedesc.SampleDesc.Count = 1;
+	texturedesc.SampleDesc.Quality = 0;
+	texturedesc.Usage = D3D11_USAGE_DEFAULT;
+	texturedesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	texturedesc.CPUAccessFlags = 0;
+	texturedesc.MiscFlags = 0;
+
+	HRESULT	hr;
+
+	hr = dev->CreateTexture2D(&texturedesc, NULL, &depthStenciltexture);
+	assert(hr == S_OK);
+
+	hr = dev->CreateDepthStencilView(depthStenciltexture, NULL, &depthStencilView);
+	assert(hr == S_OK);
+}
+void SetRenderTargets()
+{
+//	devcon->OMSetRenderTargets(1, &RTV, depthStencilView);
+	devcon->OMSetDepthStencilState(depthStencilState, 0);
+}
+
+
+
+void DrawObjects()
+{
+	HRESULT hr;
+//	devcon->OMSetDepthStencilState(depthStencilState, 0);
+	devcon->VSSetConstantBuffers(1, 1, &constantSceneBuffer);
+
+	D3D11_MAPPED_SUBRESOURCE mapScene;
+	hr = devcon->Map(constantSceneBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapScene);
+	assert(hr == S_OK);
+
+	memcpy(mapScene.pData, &toSceneShader, sizeof(SEND_TO_SCENE));
+	devcon->Unmap(constantSceneBuffer, 0);
+
+	platform.Draw(devcon);
 }
 #endif
