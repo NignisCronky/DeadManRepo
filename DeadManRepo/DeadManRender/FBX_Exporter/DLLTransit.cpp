@@ -41,7 +41,7 @@ void EXP::DLLTransit::saveFiletoBin(const char* inFileName, const char* binFileN
 	{
 		outbinFile.write((char*)&vertSize, sizeof(unsigned int));
 
-		for (unsigned int i = 0; i < vertSize; i++)
+		for (int i = 0; i < vertSize; i++)
 		{
 			VertexInfo toReturn;
 			// 1. Number of Weights and Indicies
@@ -117,7 +117,7 @@ void EXP::DLLTransit::saveFiletoBin(const char* inFileName, const char* binFileN
 				{
 					for (size_t k = 0; k < 4; k++)
 					{
-						keyFrameAnimMatrixStuff.m[j][k] = walk->mGlobalTransform[j][k];
+						keyFrameAnimMatrixStuff.m[j][k] = (float)walk->mGlobalTransform[j][k];
 					}
 				}
 				outbinFile.write((char*)&keyFrameAnimMatrixStuff, sizeof(Float4x4));
@@ -200,7 +200,7 @@ void EXP::DLLTransit::loadFilefromBin(const char* inFileName, std::vector<Vertex
 		inbinFile.read((char*)&numKeyframes, sizeof(int));
 
 		_joint.keyframes = new std::vector<KeyFrame*>();
-		for (size_t a = 0; a < numKeyframes; a++)
+		for (size_t a = 0; a < (unsigned int)numKeyframes; a++)
 		{
 			KeyFrame *incKey = new KeyFrame;
 			inbinFile.read((char*)&incKey->transform, sizeof(Float4x4));
