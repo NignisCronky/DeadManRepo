@@ -3,6 +3,7 @@
 #include "simplemath.h"
 #include "XTime.h"
 #include "Platform.h"
+#include "Skybox.h"
 
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
@@ -37,6 +38,7 @@ POINT						currPoint;
 #define TORONTOCAMERA 1
 
 Platform platform;
+Skybox skybox;
 
 // Depth Stencil Stuff
 ID3D11DepthStencilView			*depthStencilView = nullptr;
@@ -793,6 +795,7 @@ void InitializeScene()
 		}
 	}
 	platform.Initialize(dev);
+	skybox.Initialize(dev, devcon, &toSceneShader);
 }
 void KeyboardFunctions()
 {
@@ -914,6 +917,9 @@ void SetRenderTargets()
 void DrawObjects()
 {
 	HRESULT hr;
+
+	skybox.Draw();
+
 //	devcon->OMSetDepthStencilState(depthStencilState, 0);
 	devcon->VSSetConstantBuffers(1, 1, &constantSceneBuffer);
 

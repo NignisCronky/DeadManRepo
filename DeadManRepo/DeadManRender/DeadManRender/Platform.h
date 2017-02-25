@@ -3,12 +3,7 @@
 #include <d3D11.h>
 #include "Structures.h"
 
-struct TEXTURE_VERTEX
-{
-	DirectX::XMFLOAT4 pos;
-	DirectX::XMFLOAT3 normal;
-	float uv[2];
-};
+
 
 class Platform
 {
