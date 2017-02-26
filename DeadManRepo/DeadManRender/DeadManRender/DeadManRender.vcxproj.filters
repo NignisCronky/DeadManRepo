@@ -45,6 +45,9 @@
     <ClCompile Include="DDSTextureLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Skybox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimatedMesh.h">
@@ -80,6 +83,9 @@
     <ClInclude Include="DDSTextureLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Skybox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="FBXVertexShader.hlsl">
@@ -106,7 +112,17 @@
     <FxCompile Include="TVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Texture_PS.hlsl" />
-    <FxCompile Include="Texture_VS.hlsl" />
+    <FxCompile Include="Skybox_PS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Skybox_VS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Texture_PS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Texture_VS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
