@@ -96,7 +96,7 @@ void UpdateviewMatrix();
 void FBXRun(std::vector<VertexInfo> &returnData, std::vector<BoneInfo> &returnBone, Animation* animation)
 {
 	EXP::DLLTransit LoadStuffOne;
-	std::string fileOne("..\\AnimatedAssests\\AnimatedBox\\Box_Idle.fbx");
+	std::string fileOne("..\\AnimatedAssests\\AnimatedBox\\Box_Walk.fbx");
 	std::string binSaveOneLocation("fbx.bin");
 
 	//	std::vector<VertexInfo> VertStuff;
@@ -397,7 +397,27 @@ unsigned frame = 0;
 //	float keyTime;
 //	Float4x4 transform;
 //};
+float DeltaChange = 0;
+void UpdateFrameTime(std::vector<BoneInfo> BoneStuff_)
+{
+	//todo: update with interperlation
+	KeyFrame* Tempkey = BoneStuff_[0].keyframes->at(frame);
+	float update = (*Tempkey).keyTime;
+
+	DeltaChange += (float)time.Delta();
+	if (DeltaChange >= update / ((float)frame + 1.0f))
+	{
+		frame += 1;
+		frame = frame % 31;
+		DeltaChange = 0;
+	}
+	
+}
 void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
+
+
+
+
 
 	float Color[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
 	// clear the back buffer to a deep blue
@@ -413,10 +433,11 @@ void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 #endif
 
 	DrawObjects();
-
+	UpdateFrameTime(BoneStuff_);
 	for (unsigned h = 0; h < BoneStuff_.size(); h++)
 	{
-		KeyFrame* Tempkey = BoneStuff_[h].keyframes[frame][0];
+		KeyFrame* Tempkey = BoneStuff_[h].keyframes->at(frame);
+		
 		DirectX::XMFLOAT4X4 Temp;
 		for (unsigned i = 0; i < 4; i++)
 		{
@@ -821,6 +842,11 @@ void KeyboardFunctions()
 	if (GetAsyncKeyState(VK_RETURN) & 1)// enter key - toggle wire frame
 	{
 		Panel.ToggleWireFrame();
+	}
+	if (GetAsyncKeyState(VK_RIGHT) & 1)
+	{
+		frame += 1;
+		frame = frame % 31;
 	}
 	UpdateviewMatrix();
 }
