@@ -458,7 +458,7 @@ void DrawBox(DirectX::XMFLOAT4X4 position)
 	Box.Render(lcb, devcon);
 }
 
-
+bool Updateovertime = true;
 unsigned frame = 0;
 //struct KeyFrame
 //{
@@ -468,16 +468,20 @@ unsigned frame = 0;
 float DeltaChange = 0;
 void UpdateFrameTime(std::vector<BoneInfo> BoneStuff_)
 {
-	//todo: update with interperlation
-	KeyFrame* Tempkey = BoneStuff_[0].keyframes->at(frame);
-	float update = (*Tempkey).keyTime;
-
-	DeltaChange += (float)time.Delta();
-	if (DeltaChange >= update / ((float)frame + 1.0f))
+	if (Updateovertime)
 	{
-		frame += 1;
-		frame = frame % 31;
-		DeltaChange = 0;
+		//todo: update with interperlation
+		KeyFrame* Tempkey = BoneStuff_[0].keyframes->at(frame);
+		float update = (*Tempkey).keyTime;
+
+		DeltaChange += (float)time.Delta();
+		if (DeltaChange >= update / ((float)frame + 1.0f))
+		{
+			frame += 1;
+			frame = frame % 31;
+			DeltaChange = 0;
+		}
+
 	}
 	
 }
@@ -536,8 +540,8 @@ void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 	DirectX::XMStoreFloat4x4(&lcb.model, DirectX::XMMatrixIdentity());
 	lcb.projection = proj;
 	lcb.view = view;
-	
-
+	// make frame motion toggleable
+	// make a read me
 
 
 
@@ -844,6 +848,7 @@ void CameraUPdadte()
 		Panel.ToggleWireFrame();
 	}
 
+
 }
 
 #if TORONTOCAMERA
@@ -925,6 +930,10 @@ void KeyboardFunctions()
 		frame = frame % 31;
 	}
 	UpdateviewMatrix();
+	if (GetAsyncKeyState(VK_ESCAPE) & 1)// BackSpace - toggle wire frame
+	{
+		Updateovertime = !Updateovertime;
+	}
 }
 void MouseFunctions()
 {
