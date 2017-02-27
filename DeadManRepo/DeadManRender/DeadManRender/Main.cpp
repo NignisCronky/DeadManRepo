@@ -74,7 +74,7 @@ void InitGraphics(void);    // creates the shape to render
 void InitPipeline(void);    // loads and prepares the shaders
 
 
-void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess);
+void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess, std::vector<VERTEXBone> VE);
 void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_);
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -176,7 +176,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 
 	std::vector<VERTEX> Verts;
-
+	std::vector<VERTEXBone> ves;
 
 	for (unsigned i = 0; i < VertStuff.size(); i++)
 	{
@@ -195,9 +195,75 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	///////////////
+	for (unsigned i = 0; i < Verts.size(); i++)
+	{
+		VERTEXBone Temp;
+		Temp.X = Verts[i].X;
+		Temp.Y = Verts[i].Y;
+		Temp.Z = Verts[i].Z;
+		Temp.Color[0] = Verts[i].Color[0];
+		Temp.Color[1] = Verts[i].Color[1];
+		Temp.Color[2] = Verts[i].Color[2];
+		Temp.Color[3] = Verts[i].Color[3];
+		unsigned Blendsize = VertStuff[i].blendWeights.size();
+		switch (Blendsize)
+		{
+		case 1:
+		{
+			Temp.Weight[0] = VertStuff[i].blendWeights[0];
+			Temp.Ind[0] = VertStuff[i].boneIndices[0];
+			Temp.Weight[1] = 0;
+			Temp.Ind[1] = 0;
+			Temp.Weight[2] = 0;
+			Temp.Ind[2] = 0;
+			Temp.Weight[3] = 0;
+			Temp.Ind[3] = 0;
+		}
+			break;
+		case 2:
+		{
+			Temp.Weight[0] = VertStuff[i].blendWeights[0];
+			Temp.Weight[1] = VertStuff[i].blendWeights[1];
+			Temp.Ind[0] = VertStuff[i].boneIndices[0];
+			Temp.Ind[1] = VertStuff[i].boneIndices[1];
+			Temp.Weight[2] = 0;
+			Temp.Ind[2] = 0;
+			Temp.Weight[3] = 0;
+			Temp.Ind[3] = 0;
+		}
+		break;
+		case 3:
+		{
+			Temp.Weight[0] = VertStuff[i].blendWeights[0];
+			Temp.Weight[1] = VertStuff[i].blendWeights[1];
+			Temp.Weight[2] = VertStuff[i].blendWeights[2];
+			Temp.Ind[0] = VertStuff[i].boneIndices[0];
+			Temp.Ind[1] = VertStuff[i].boneIndices[1];
+			Temp.Ind[2] = VertStuff[i].boneIndices[2];
+			Temp.Weight[3] = 0;
+			Temp.Ind[3] = 0;
+		}
+		break;
+		case 4:
+		{
+			Temp.Weight[0] = VertStuff[i].blendWeights[0];
+			Temp.Weight[1] = VertStuff[i].blendWeights[1];
+			Temp.Weight[2] = VertStuff[i].blendWeights[2];
+			Temp.Weight[3] = VertStuff[i].blendWeights[3];
+			Temp.Ind[0] = VertStuff[i].boneIndices[0];
+			Temp.Ind[1] = VertStuff[i].boneIndices[1];
+			Temp.Ind[2] = VertStuff[i].boneIndices[2];
+			Temp.Ind[3] = VertStuff[i].boneIndices[3];
+		}
+		break;
+		default:
+			break;
+		}
 
+		ves.push_back(Temp);
+	}
 
-	InitRenderOBjects(hWnd, Verts);
+	InitRenderOBjects(hWnd, Verts,ves);
 	//InitD3D(hWnd);
 
 #if	LOGANOSCAMERA
@@ -302,7 +368,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 //	InitGraphics();
 //}
 
-void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
+void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess, std::vector<VERTEXBone> VE) {
 	// create a struct to hold information about the swap chain
 	DXGI_SWAP_CHAIN_DESC scd;
 
@@ -364,7 +430,7 @@ void InitRenderOBjects(HWND hWnd, std::vector<VERTEX> vertesess) {
 
 	devcon->OMSetDepthStencilState(depthStencilState, 0);//
 
-	Panel.InitEverything(dev, devcon, vertesess);
+	Panel.InitEverythingBones(dev, devcon, VE);
 	for (unsigned i = 0; i < vertesess.size(); i++)
 	{
 
@@ -415,6 +481,7 @@ void UpdateFrameTime(std::vector<BoneInfo> BoneStuff_)
 	}
 	
 }
+
 void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 
 
@@ -433,7 +500,7 @@ void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 	KeyboardFunctions();
 	MouseFunctions();
 #endif
-
+	RenderObjects::FourBones BonesForConstantBuffer;
 	DrawObjects();
 	UpdateFrameTime(BoneStuff_);
 	for (unsigned h = 0; h < BoneStuff_.size(); h++)
@@ -460,6 +527,7 @@ void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 			}
 		}
 		DrawBox(Temp);
+		BonesForConstantBuffer.Bones[h] = Temp;
 	}
 
 
@@ -468,7 +536,12 @@ void RenderRenderObjects(std::vector<BoneInfo> BoneStuff_) {
 	DirectX::XMStoreFloat4x4(&lcb.model, DirectX::XMMatrixIdentity());
 	lcb.projection = proj;
 	lcb.view = view;
-	Panel.Render(lcb, devcon);
+	
+
+
+
+
+	Panel.Render(lcb, devcon,BonesForConstantBuffer);
 
 	swapchain->Present(0, 0);
 
